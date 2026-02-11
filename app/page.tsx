@@ -44,10 +44,16 @@ export default function Home() {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       streamRef.current = stream;
 
-      // Setup AudioContext for visualization
+      // Setup AudioContext for visualization and processing
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const audioContext = new AudioContextClass();
@@ -58,13 +64,30 @@ export default function Home() {
       analyserRef.current = analyser;
 
       const source = audioContext.createMediaStreamSource(stream);
-      source.connect(analyser);
+
+      // Noise reduction filters
+      const hpFilter = audioContext.createBiquadFilter();
+      hpFilter.type = 'highpass';
+      hpFilter.frequency.value = 80; // Remove low-end rumble below 80Hz
+
+      const lpFilter = audioContext.createBiquadFilter();
+      lpFilter.type = 'lowpass';
+      lpFilter.frequency.value = 8000; // Remove high-frequency hiss above 8kHz
+
+      // Create destination for recording processed audio
+      const destination = audioContext.createMediaStreamDestination();
+
+      // Connect: Source -> HP Filter -> LP Filter -> Analyser & Destination
+      source.connect(hpFilter);
+      hpFilter.connect(lpFilter);
+      lpFilter.connect(analyser);
+      lpFilter.connect(destination);
 
       const bufferLength = analyser.frequencyBinCount;
       dataArrayRef.current = new Uint8Array(bufferLength);
 
-      // Setup MediaRecorder for recording
-      const mediaRecorder = new MediaRecorder(stream);
+      // Setup MediaRecorder for recording the processed stream
+      const mediaRecorder = new MediaRecorder(destination.stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -119,14 +142,67 @@ export default function Home() {
     setIsRecording(false);
   };
 
+  const extractAudioFromVideo = async (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.src = URL.createObjectURL(file);
+      video.onloadedmetadata = async () => {
+        try {
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          const audioContext = new AudioContextClass();
+          const stream = (video as any).captureStream ? (video as any).captureStream() : (video as any).mozCaptureStream();
+          const source = audioContext.createMediaStreamSource(stream);
+          const destination = audioContext.createMediaStreamDestination();
+          source.connect(destination);
+
+          const mediaRecorder = new MediaRecorder(destination.stream);
+          const chunks: Blob[] = [];
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) chunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'audio/webm' });
+            URL.revokeObjectURL(video.src);
+            resolve(blob);
+          };
+
+          video.play();
+          mediaRecorder.start();
+
+          video.onended = () => {
+            mediaRecorder.stop();
+            audioContext.close();
+          };
+        } catch (err) {
+          URL.revokeObjectURL(video.src);
+          reject(err);
+        }
+      };
+      video.onerror = () => {
+        URL.revokeObjectURL(video.src);
+        reject(new Error('خطأ في تحميل ملف الفيديو'));
+      };
+    });
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       try {
-        uploadAudio(file);
+        if (file.type.startsWith('audio/')) {
+          uploadAudio(file);
+        } else if (file.type.startsWith('video/')) {
+          // Show a loading state or message if needed
+          const audioBlob = await extractAudioFromVideo(file);
+          uploadAudio(audioBlob);
+        } else {
+          alert('يرجى اختيار ملف صوتي أو فيديو صالح');
+        }
       } catch (e) {
         console.error(e);
-        alert('ملف صوتي غير صالح');
+        alert('حدث خطأ أثناء معالجة الملف');
       }
     }
     // Reset input value to allow re-uploading the same file
@@ -261,7 +337,13 @@ export default function Home() {
           >
             <div className='absolute w-40 h-40 group-hover:scale-110 transition-all duration-500 ease-in-out rounded-full border border-dashed border-(--primary)' />
             <div className='absolute w-40 h-40 group-hover:scale-140 transition-all duration-400 ease-in-out rounded-full border border-dashed border-(--secondary)' />
-            <input type='file' ref={fileInputRef} className='hidden' accept='audio/*' onChange={handleFileUpload} />
+            <input
+              type='file'
+              ref={fileInputRef}
+              className='hidden'
+              accept='audio/*,video/*'
+              onChange={handleFileUpload}
+            />
             <button className='w-36 h-36 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'>
               <div className='h-10 flex items-center justify-center'>
                 <Upload size={40} className='text-white' />
