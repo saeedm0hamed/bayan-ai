@@ -23,20 +23,6 @@ export default function Home() {
   const startTimeRef = useRef<number | null>(null);
   const maxRecordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const getAudioDuration = (file: Blob | File): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const audio = new Audio(URL.createObjectURL(file));
-      audio.onloadedmetadata = () => {
-        URL.revokeObjectURL(audio.src);
-        resolve(audio.duration);
-      };
-      audio.onerror = () => {
-        URL.revokeObjectURL(audio.src);
-        reject('Invalid audio file');
-      };
-    });
-  };
-
   const uploadAudio = (blobOrFile: Blob | File) => {
     setAudioFile(blobOrFile);
     router.push('/result');
@@ -142,67 +128,14 @@ export default function Home() {
     setIsRecording(false);
   };
 
-  const extractAudioFromVideo = async (file: File): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      video.src = URL.createObjectURL(file);
-      video.onloadedmetadata = async () => {
-        try {
-          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-          const audioContext = new AudioContextClass();
-          const stream = (video as any).captureStream ? (video as any).captureStream() : (video as any).mozCaptureStream();
-          const source = audioContext.createMediaStreamSource(stream);
-          const destination = audioContext.createMediaStreamDestination();
-          source.connect(destination);
-
-          const mediaRecorder = new MediaRecorder(destination.stream);
-          const chunks: Blob[] = [];
-
-          mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) chunks.push(e.data);
-          };
-
-          mediaRecorder.onstop = () => {
-            const blob = new Blob(chunks, { type: 'audio/webm' });
-            URL.revokeObjectURL(video.src);
-            resolve(blob);
-          };
-
-          video.play();
-          mediaRecorder.start();
-
-          video.onended = () => {
-            mediaRecorder.stop();
-            audioContext.close();
-          };
-        } catch (err) {
-          URL.revokeObjectURL(video.src);
-          reject(err);
-        }
-      };
-      video.onerror = () => {
-        URL.revokeObjectURL(video.src);
-        reject(new Error('خطأ في تحميل ملف الفيديو'));
-      };
-    });
-  };
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       try {
-        if (file.type.startsWith('audio/')) {
-          uploadAudio(file);
-        } else if (file.type.startsWith('video/')) {
-          // Show a loading state or message if needed
-          const audioBlob = await extractAudioFromVideo(file);
-          uploadAudio(audioBlob);
-        } else {
-          alert('يرجى اختيار ملف صوتي أو فيديو صالح');
-        }
+        uploadAudio(file);
       } catch (e) {
         console.error(e);
-        alert('حدث خطأ أثناء معالجة الملف');
+        alert('ملف صوتي غير صالح');
       }
     }
     // Reset input value to allow re-uploading the same file
@@ -266,7 +199,7 @@ export default function Home() {
   }, [isRecording]);
 
   return (
-    <main className='min-h-screen flex flex-col items-center justify-between bg-white px-6 py-6 text-gray-800 font-readex relative'>
+    <main className='relative flex flex-col items-center justify-between min-h-screen px-6 py-6 text-gray-800 bg-white font-readex'>
       <NavBar />
 
       {/* Center content */}
@@ -278,7 +211,7 @@ export default function Home() {
             </h1>
           </div>
           <div className='p-5'>
-            <p className='text-gray-500 text-xs' dir='rtl'>
+            <p className='text-xs text-gray-500' dir='rtl'>
               استخدم الذكاء الاصطناعي للتعرف على السور والآيات من خلال الصوت!
             </p>
           </div>
@@ -286,7 +219,7 @@ export default function Home() {
 
         <motion.div className='relative flex items-center'>
           {/* Mic button */}
-          <div className='relative flex flex-col items-center justify-center p-10 w-56 h-56'>
+          <div className='relative flex flex-col items-center justify-center w-56 h-56 p-10'>
             {!isRecording && (
               <motion.div
                 layoutId='mic-container'
@@ -302,10 +235,10 @@ export default function Home() {
                   layoutId='mic-button'
                   className='w-36 h-36 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'
                 >
-                  <div className='h-10 flex items-center justify-center'>
+                  <div className='flex items-center justify-center h-10'>
                     <Mic size={40} className='text-white' />
                   </div>
-                  <div className='h-10 flex flex-col items-center justify-center text-white'>
+                  <div className='flex flex-col items-center justify-center h-10 text-white'>
                     <motion.p layoutId='mic-text' className='text-base font-medium text-white'>
                       تسجيل مباشر
                     </motion.p>
@@ -332,23 +265,17 @@ export default function Home() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className='relative flex items-center justify-center hover:cursor-pointer p-10 group'
+            className='relative flex items-center justify-center p-10 hover:cursor-pointer group'
             onClick={() => fileInputRef.current?.click()}
           >
             <div className='absolute w-40 h-40 group-hover:scale-110 transition-all duration-500 ease-in-out rounded-full border border-dashed border-(--primary)' />
             <div className='absolute w-40 h-40 group-hover:scale-140 transition-all duration-400 ease-in-out rounded-full border border-dashed border-(--secondary)' />
-            <input
-              type='file'
-              ref={fileInputRef}
-              className='hidden'
-              accept='audio/*,video/*'
-              onChange={handleFileUpload}
-            />
+            <input type='file' ref={fileInputRef} className='hidden' accept='audio/*' onChange={handleFileUpload} />
             <button className='w-36 h-36 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'>
-              <div className='h-10 flex items-center justify-center'>
+              <div className='flex items-center justify-center h-10'>
                 <Upload size={40} className='text-white' />
               </div>
-              <div className='h-10 flex flex-col gap-2 text-base font-medium text-white '>
+              <div className='flex flex-col h-10 gap-2 text-base font-medium text-white '>
                 <p>رفع</p>
                 <span className='text-xs text-white/60'>(فيديو - صوت)</span>
               </div>
@@ -371,12 +298,12 @@ export default function Home() {
                 ref={canvasRef}
                 width={800}
                 height={300}
-                className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none'
+                className='absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none top-1/2 left-1/2'
               />
               <motion.button
                 layoutId='mic-button'
                 onClick={stopRecording}
-                className='w-24 h-24 rounded-full bg-red-500 hover:bg-red-600 transition-colors duration-300 ease-in-out flex items-center justify-center shadow-xl z-10'
+                className='z-10 flex items-center justify-center w-24 h-24 transition-colors duration-300 ease-in-out bg-red-500 rounded-full shadow-xl hover:bg-red-600'
               >
                 <Square size={32} className='text-white fill-current' />
               </motion.button>
@@ -389,7 +316,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Footer stats */}
-      {/* <footer className='w-full max-w-xl border-t border-gray-500 pt-6 text-center text-sm text-gray-500'>
+      {/* <footer className='w-full max-w-xl pt-6 text-sm text-center text-gray-500 border-t border-gray-500'>
         <div className='flex justify-between'>
           <div>
             <p className='text-xs'>مدعوم بـ</p>
