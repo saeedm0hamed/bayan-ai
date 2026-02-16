@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { Mic, Upload, Square } from 'lucide-react';
@@ -6,6 +7,7 @@ import NavBar from './components/NavBar';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAudio } from './context/AudioContext';
+import Link from 'next/link';
 
 export default function Home() {
   const router = useRouter();
@@ -40,7 +42,6 @@ export default function Home() {
       streamRef.current = stream;
 
       // Setup AudioContext for visualization and processing
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const audioContext = new AudioContextClass();
       audioContextRef.current = audioContext;
@@ -131,11 +132,10 @@ export default function Home() {
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      try {
+      if (file.type.startsWith('audio/') || file.type.startsWith('video/')) {
         uploadAudio(file);
-      } catch (e) {
-        console.error(e);
-        alert('ملف صوتي غير صالح');
+      } else {
+        alert('يرجى اختيار ملف صوتي أو فيديو صالح');
       }
     }
     // Reset input value to allow re-uploading the same file
@@ -199,25 +199,32 @@ export default function Home() {
   }, [isRecording]);
 
   return (
-    <main className='relative flex flex-col items-center justify-between min-h-screen px-6 py-6 text-gray-800 bg-white font-readex'>
+    <main className='relative flex flex-col items-center justify-between min-h-screen px-6 py-6 text-foreground bg-background font-readex'>
       <NavBar />
 
       {/* Center content */}
       <section className='flex flex-col items-center justify-center flex-1 text-center'>
         <div className='relative p-5'>
-          <div className='p-5'>
-            <h1 className='text-3xl md:text-6xl text-(--primary) font-amiri'>
-              <span className='text-xs text-gray-400'>[المزمل: 4]</span>﴾ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴿
+          <div className='relative flex flex-row-reverse p-5'>
+            <h1 className='text-[2.6rem] md:text-6xl text-nowrap text-(--primary) font-amiri'>
+              ﴾ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴿
             </h1>
+            <Link
+              href={`https://quran.com/73?startingVerse=4`}
+              target='_blank'
+              className='absolute bottom-0 left-0 text-[0.5rem] md:text-xs text-muted-foreground top-2 hover:underline underline-offset-3'
+            >
+              [المزمل: 4]
+            </Link>
           </div>
           <div className='p-5'>
-            <p className='text-xs text-gray-500' dir='rtl'>
+            <p className='text-[0.5rem] md:text-xs text-muted-foreground' dir='rtl'>
               استخدم الذكاء الاصطناعي للتعرف على السور والآيات من خلال الصوت!
             </p>
           </div>
         </div>
 
-        <motion.div className='relative flex items-center'>
+        <motion.div className='relative flex flex-col items-center md:flex-row'>
           {/* Mic button */}
           <div className='relative flex flex-col items-center justify-center w-56 h-56 p-10'>
             {!isRecording && (
@@ -244,20 +251,45 @@ export default function Home() {
                     </motion.p>
                   </div>
                 </motion.button>
+
+                {/* Processing Overlay DON'T REMOVE */}
+                {/* <AnimatePresence>
+        {isProcessing && (
+          <motion.div
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            className='fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm'
+          >
+            <div className='flex flex-col items-center gap-6'>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              >
+                <Loader2 size={60} className='text-(--primary)' />
+              </motion.div>
+              <div className='flex flex-col items-center gap-2'>
+                <h2 className='text-2xl font-bold text-gray-800' dir='rtl'>جاري المعالجة...</h2>
+                <p className='text-gray-500' dir='rtl'>يتم استخراج الصوت بجودة عالية</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence> */}
               </motion.div>
             )}
 
-            <div className='absolute right-auto bottom-[-10] flex items-center justify-center rounded-2xl px-2 py-1 border-neutral-300 border backdrop-blur-sm cursor-default hover:shadow-sm bg-white/20 text-xs transition duration-200'>
+            <div className='absolute right-auto bottom-[-10] flex items-center justify-center rounded-2xl px-2 py-1 border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs transition duration-200'>
               <p>حد أقصى 60 ثانية</p>
               <span className='w-1.5 h-1.5 rounded-full bg-yellow-400 mx-1 inline-block' />
             </div>
           </div>
 
           {/* Divider */}
-          <div className='relative flex flex-col items-center flex-1 gap-2 p-10'>
-            <div className='h-14 min-h-[1em] w-px bg-linear-0 from-transparent via-gray-500 to-transparent opacity-25'></div>
-            <p className='text-gray-400'>أو</p>
-            <div className='h-14 min-h-[1em] w-px bg-linear-0 from-transparent via-gray-500 to-transparent opacity-25'></div>
+          <div className='relative flex flex-row items-center flex-1 p-1 md:p-10 gap-14 md:gap-2 md:flex-col'>
+            <div className='md:h-14 h-24 min-h-[1em] w-px rotate-90 md:rotate-0 bg-linear-0 from-transparent via-muted-foreground to-transparent opacity-25'></div>
+            <p className='text-muted-foreground'>أو</p>
+            <div className='md:h-14 h-24 min-h-[1em] w-px rotate-90 md:rotate-0 bg-linear-0 from-transparent via-muted-foreground to-transparent opacity-25'></div>
           </div>
 
           {/* Audio button */}
@@ -265,12 +297,18 @@ export default function Home() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className='relative flex items-center justify-center p-10 hover:cursor-pointer group'
+            className='relative flex items-center justify-center p-5 hover:cursor-pointer group'
             onClick={() => fileInputRef.current?.click()}
           >
             <div className='absolute w-40 h-40 group-hover:scale-110 transition-all duration-500 ease-in-out rounded-full border border-dashed border-(--primary)' />
             <div className='absolute w-40 h-40 group-hover:scale-140 transition-all duration-400 ease-in-out rounded-full border border-dashed border-(--secondary)' />
-            <input type='file' ref={fileInputRef} className='hidden' accept='audio/*' onChange={handleFileUpload} />
+            <input
+              type='file'
+              ref={fileInputRef}
+              className='hidden'
+              accept='audio/*,video/*'
+              onChange={handleFileUpload}
+            />
             <button className='w-36 h-36 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'>
               <div className='flex items-center justify-center h-10'>
                 <Upload size={40} className='text-white' />
@@ -291,7 +329,7 @@ export default function Home() {
             initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
             animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
             exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            className='fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/60'
+            className='fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm'
           >
             <motion.div layoutId='mic-container' className='relative flex items-center justify-center'>
               <canvas
@@ -308,7 +346,7 @@ export default function Home() {
                 <Square size={32} className='text-white fill-current' />
               </motion.button>
             </motion.div>
-            <motion.p layoutId='mic-text' className='mt-8 text-xl font-medium text-gray-700'>
+            <motion.p layoutId='mic-text' className='mt-8 text-xl font-medium text-foreground'>
               جاري الاستماع...
             </motion.p>
           </motion.div>

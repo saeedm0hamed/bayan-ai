@@ -23,7 +23,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className='min-h-screen flex flex-col items-center bg-white px-6 py-6 text-gray-800 font-readex'>
+    <div className='min-h-screen flex flex-col items-center bg-background px-6 py-6 text-foreground font-readex'>
       <NavBar />
       <div className='container mx-auto px-4 py-6 max-w-7xl' dir='rtl'>
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-8'>
@@ -32,20 +32,20 @@ export default function HistoryPage() {
             <nav className='flex flex-col gap-2'>
               <button
                 onClick={handleClearHistory}
-                className='flex items-center cursor-pointer gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors w-full text-right'
+                className='flex items-center cursor-pointer gap-3 px-4 py-3 text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20 rounded-xl transition-colors w-full text-right'
               >
                 <Trash2 size={20} />
                 <span className='font-medium'>مسح السجل</span>
               </button>
-              <div className='my-2 border-t border-gray-100'></div>
+              <div className='my-2 border-t border-border'></div>
             </nav>
           </aside>
 
           {/* Main Content */}
           <main className='lg:col-span-9'>
             <div className='flex items-center gap-4 mb-8'>
-              <h2 className='text-2xl font-bold text-gray-800 font-amiri'>سجل الاستماع</h2>
-              <span className='bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full'>
+              <h2 className='text-2xl font-bold text-foreground font-amiri'>سجل الاستماع</h2>
+              <span className='bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full'>
                 {historyItems.length} عملية بحث
               </span>
             </div>
@@ -56,7 +56,7 @@ export default function HistoryPage() {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className='text-center py-12 text-gray-400'
+                    className='text-center py-12 text-muted-foreground'
                   >
                     <p>لا يوجد سجل استماع حتى الآن</p>
                   </motion.div>
@@ -68,7 +68,7 @@ export default function HistoryPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ delay: index * 0.05 }}
-                      className='bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow'
+                      className='bg-card p-4 rounded-2xl shadow-sm border border-border flex items-center justify-between group hover:shadow-md transition-shadow text-card-foreground'
                     >
                       <div className='flex items-center gap-4 flex-1'>
                         {/* Number Badge */}
@@ -78,13 +78,13 @@ export default function HistoryPage() {
 
                         {/* Content */}
                         <div className='flex flex-col gap-1'>
-                          <h3 className='font-bold text-gray-800 text-2xl font-amiri'>سورة {item.surah}</h3>
-                          <div className='flex items-center gap-3 text-xs text-gray-400'>
+                          <h3 className='font-bold text-foreground text-2xl font-amiri'>سورة {item.surah}</h3>
+                          <div className='flex items-center gap-3 text-xs text-muted-foreground'>
                             <span className='flex items-center gap-1'>
                               {/* Calendar Icon could go here */}
                               {item.date}
                             </span>
-                            <span className='w-1 h-1 bg-gray-300 rounded-full'></span>
+                            <span className='w-1 h-1 bg-border rounded-full'></span>
                             <span className='flex items-center gap-1'>مدة الصوت: {item.duration}</span>
                           </div>
                         </div>

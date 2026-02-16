@@ -30,14 +30,26 @@ export const metadata: Metadata = {
   description: 'Bayan AI - بيان',
 };
 
+const themeScript = `
+(function() {
+  const key = 'bayan-theme';
+  const stored = localStorage.getItem(key);
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = stored === 'dark' || (stored !== 'light' && prefersDark);
+  if (isDark) document.documentElement.classList.add('dark');
+  else document.documentElement.classList.remove('dark');
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en'>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${readex.variable} ${amiri.variable} antialiased`}>
+    <html lang='en' suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${readex.variable} ${amiri.variable} antialiased bg-background text-foreground`}>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Providers>{children}</Providers>
         <Analytics />
       </body>
