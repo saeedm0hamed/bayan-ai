@@ -93,7 +93,7 @@ export default function ResultPage() {
   }, [audioFile, router]);
 
   return (
-    <main className='flex flex-col items-center min-h-screen px-6 py-6 text-foreground bg-background font-readex'>
+    <main className='flex flex-col items-center min-h-screen px-6 py-18 text-foreground bg-background font-readex'>
       <NavBar />
 
       <div className='flex flex-col items-center justify-center flex-1 w-full max-w-2xl'>

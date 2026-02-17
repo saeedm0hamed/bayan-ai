@@ -23,7 +23,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className='min-h-screen flex flex-col items-center bg-background px-6 py-6 text-foreground font-readex'>
+    <div className='min-h-screen flex flex-col items-center bg-background px-6 py-18 text-foreground font-readex'>
       <NavBar />
       <div className='container mx-auto px-4 py-6 max-w-7xl' dir='rtl'>
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-8'>

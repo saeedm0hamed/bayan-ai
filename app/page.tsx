@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Mic, Upload, Square } from 'lucide-react';
+import { Mic, Upload, Square, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavBar from './components/NavBar';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAudio } from './context/AudioContext';
 import Link from 'next/link';
+import DisclaimerCard from './components/DisclaimerCard';
 
 export default function Home() {
   const router = useRouter();
@@ -202,8 +203,31 @@ export default function Home() {
     <main className='relative flex flex-col items-center justify-between min-h-screen px-6 py-6 text-foreground bg-background font-readex'>
       <NavBar />
 
+      <div className='hidden w-full md:flex justify-start mt-24 px-6'>
+        <div className='w-full md:absolute max-w-sm'>
+          <DisclaimerCard />
+        </div>
+      </div>
+      {/* <div style={{ width: '100%', height: '600px', position: 'absolute', zIndex: 0 }}>
+        <LightRays
+          raysOrigin='top-center'
+          raysColor='#1100ff'
+          raysSpeed={1}
+          lightSpread={0.5}
+          rayLength={3}
+          followMouse={true}
+          mouseInfluence={0.1}
+          noiseAmount={0}
+          distortion={0}
+          className='custom-rays'
+          pulsating={false}
+          fadeDistance={1}
+          saturation={1}
+        />
+      </div> */}
+
       {/* Center content */}
-      <section className='flex flex-col items-center justify-center flex-1 text-center'>
+      <section className='flex flex-col items-center justify-center py-12 text-center'>
         <div className='relative p-5'>
           <div className='relative flex flex-row-reverse p-5'>
             <h1 className='text-[2.6rem] md:text-6xl text-nowrap text-(--primary) font-amiri'>
@@ -224,7 +248,7 @@ export default function Home() {
           </div>
         </div>
 
-        <motion.div className='relative flex flex-col items-center md:flex-row'>
+        <motion.div className='relative flex items-center flex-row'>
           {/* Mic button */}
           <div className='relative flex flex-col items-center justify-center w-56 h-56 p-10'>
             {!isRecording && (
@@ -279,17 +303,17 @@ export default function Home() {
               </motion.div>
             )}
 
-            <div className='absolute right-auto bottom-[-10] flex items-center justify-center rounded-2xl px-2 py-1 border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs transition duration-200'>
+            <div className='absolute right-auto bottom-[-10] md:bottom-[-35] flex items-center justify-center rounded-2xl px-2 py-1 border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs transition duration-200'>
               <p>حد أقصى 60 ثانية</p>
               <span className='w-1.5 h-1.5 rounded-full bg-yellow-400 mx-1 inline-block' />
             </div>
           </div>
 
           {/* Divider */}
-          <div className='relative flex flex-row items-center flex-1 p-1 md:p-10 gap-14 md:gap-2 md:flex-col'>
-            <div className='md:h-14 h-24 min-h-[1em] w-px rotate-90 md:rotate-0 bg-linear-0 from-transparent via-muted-foreground to-transparent opacity-25'></div>
+          <div className='relative flex items-center flex-1 p-1 md:p-10 gap-2 flex-col'>
+            <div className='h-14 min-h-[1em] w-px rotate-0 bg-linear-0 from-transparent via-muted-foreground to-transparent opacity-25'></div>
             <p className='text-muted-foreground'>أو</p>
-            <div className='md:h-14 h-24 min-h-[1em] w-px rotate-90 md:rotate-0 bg-linear-0 from-transparent via-muted-foreground to-transparent opacity-25'></div>
+            <div className='h-14 min-h-[1em] w-px rotate-0 bg-linear-0 fr om-transparent via-muted-foreground to-transparent opacity-25'></div>
           </div>
 
           {/* Audio button */}
@@ -320,8 +344,11 @@ export default function Home() {
             </button>
           </motion.div>
         </motion.div>
-      </section>
 
+        <div className='w-full max-w-sm mt-8 md:hidden'>
+          <DisclaimerCard />
+        </div>
+      </section>
       {/* Recording Overlay */}
       <AnimatePresence>
         {isRecording && (
@@ -352,24 +379,25 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Footer stats */}
-      {/* <footer className='w-full max-w-xl pt-6 text-sm text-center text-gray-500 border-t border-gray-500'>
-        <div className='flex justify-between'>
-          <div>
-            <p className='text-xs'>مدعوم بـ</p>
-            <p className='font-medium text-green-700'>Bayyinat‑V2</p>
-          </div>
+      <footer className='w-full max-w-xl pt-6 text-sm text-center items-center text-gray-500 border-t border-gray-500'>
+        <div className='flex justify-between items-center'>
           <div>
             <p className='text-xs'>سرعة المعالجة</p>
             <p className='font-medium'>0.4 ث</p>
+          </div>
+          <div>
+            <p className='text-xs' dir='rtl'>
+              سور تم التعرف عليها حتى الآن بإستخدام Bayan AI
+            </p>
+            <p className='font-medium text-green-700'>#</p>
           </div>
           <div>
             <p className='text-xs'>دقة التعرف</p>
             <p className='font-medium'>99.8%</p>
           </div>
         </div>
-      </footer> */}
+      </footer>
     </main>
   );
 }

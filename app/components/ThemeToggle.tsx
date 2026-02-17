@@ -8,16 +8,12 @@ export function ThemeToggle() {
 
   return (
     <button
-      type="button"
+      type='button'
       onClick={toggleTheme}
-      className="flex items-center justify-center w-9 h-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
+      className='flex items-center justify-center w-9 h-9 cursor-pointer hover:scale-105 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-300'
       aria-label={resolvedTheme === 'dark' ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
     >
-      {resolvedTheme === 'dark' ? (
-        <Sun size={18} className="text-foreground" />
-      ) : (
-        <Moon size={18} />
-      )}
+      {resolvedTheme === 'dark' ? <Sun size={20} className='text-foreground' /> : <Moon size={20} />}
     </button>
   );
 }

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono, Readex_Pro, Amiri_Quran } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
@@ -28,6 +28,15 @@ const amiri = Amiri_Quran({
 export const metadata: Metadata = {
   title: 'Bayan AI - بيان',
   description: 'Bayan AI - بيان',
+  appleWebApp: {
+    capable: true,
+    title: 'Bayan AI - بيان',
+    statusBarStyle: 'black-translucent',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#1e00ff',
 };
 
 const themeScript = `
@@ -41,6 +50,22 @@ const themeScript = `
 })();
 `;
 
+const serviceWorkerScript = `
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    const isLocalhost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+    const isHttps = window.location.protocol === 'https:';
+    if (isHttps || isLocalhost) {
+      navigator.serviceWorker.register('/sw.js').catch(function (error) {
+        console.error('Service worker registration failed:', error);
+      });
+    }
+  });
+}
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -50,6 +75,7 @@ export default function RootLayout({
     <html lang='en' suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} ${readex.variable} ${amiri.variable} antialiased bg-background text-foreground`}>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: serviceWorkerScript }} />
         <Providers>{children}</Providers>
         <Analytics />
       </body>
