@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, History, Settings, Trash2, ExternalLink, RotateCw } from 'lucide-react';
+import { ExternalLink, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { getHistory, clearHistory, HistoryItem } from '../../utils/history';
 import NavBar from '../components/NavBar';
@@ -16,7 +16,7 @@ export default function HistoryPage() {
   }, []);
 
   const handleClearHistory = () => {
-    if (confirm('هل أنت متأكد من مسح سجل الاستماع؟')) {
+    if (confirm('هل أنت متأكد من مسح سجل السور')) {
       clearHistory();
       setHistoryItems([]);
     }
@@ -44,9 +44,9 @@ export default function HistoryPage() {
           {/* Main Content */}
           <main className='lg:col-span-9'>
             <div className='flex items-center gap-4 mb-8'>
-              <h2 className='text-2xl font-bold text-foreground font-amiri'>سجل الاستماع</h2>
+              <h2 className='text-2xl font-bold text-foreground font-amiri'>سجل السور</h2>
               <span className='bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full'>
-                {historyItems.length} عملية بحث
+                {historyItems.length} عملية تعرف
               </span>
             </div>
 
@@ -58,50 +58,45 @@ export default function HistoryPage() {
                     animate={{ opacity: 1 }}
                     className='text-center py-12 text-muted-foreground'
                   >
-                    <p>لا يوجد سجل استماع حتى الآن</p>
+                    <p>لا يوجد سجل سور حتى الآن</p>
                   </motion.div>
                 ) : (
-                  historyItems.map((item, index) => (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ delay: index * 0.05 }}
-                      className='bg-card p-4 rounded-2xl shadow-sm border border-border flex items-center justify-between group hover:shadow-md transition-shadow text-card-foreground'
-                    >
-                      <div className='flex items-center gap-4 flex-1'>
-                        {/* Number Badge */}
-                        <div className='w-12 h-12 bg-(--secondary)/10 rounded-xl flex items-center justify-center text-(--primary) font-bold text-lg shrink-0'>
-                          {index + 1}
-                        </div>
+                  historyItems.map((item, index) => {
+                    const similarityPercent =
+                      typeof item.similarity === 'number' && !isNaN(item.similarity)
+                        ? Math.round(item.similarity * 100)
+                        : null;
 
-                        {/* Content */}
-                        <div className='flex flex-col gap-1'>
-                          <h3 className='font-bold text-foreground text-2xl font-amiri'>سورة {item.surah}</h3>
-                          <div className='flex items-center gap-3 text-xs text-muted-foreground'>
-                            <span className='flex items-center gap-1'>
-                              {/* Calendar Icon could go here */}
-                              {item.date}
-                            </span>
-                            <span className='w-1 h-1 bg-border rounded-full'></span>
-                            <span className='flex items-center gap-1'>مدة الصوت: {item.duration}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className='mr-4'>
+                    return (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ delay: index * 0.05 }}
+                      >
                         <Link
                           href={`https://quran.com/${item.surahNumber}?startingVerse=${item.ayahNumber}`}
                           target='_blank'
-                          className='w-10 h-10 rounded-full cursor-pointer bg-(--secondary)/10 text-(--primary) flex items-center justify-center hover:bg-(--secondary) hover:text-white transition-colors'
+                          className='flex flex-col group items-start w-full p-4 relative text-right border rounded-2xl bg-muted/60 hover:bg-muted transition text-card-foreground'
                         >
-                          <ExternalLink size={18} />
+                          <div className='flex items-center justify-between w-full gap-2'>
+                            <p className='font-amiri text-xl'>
+                              <span className='text-(--primary)'> سورة {item.surah}</span>
+                              <span className='text-muted-foreground'> - آية {item.ayahNumber}</span>
+                            </p>
+                            <span className=' text-sm text-muted-foreground'>
+                              {similarityPercent !== null ? `${similarityPercent}%` : '—'}
+                            </span>
+                            <button className='w-10 h-10 absolute left-3 bottom-2 rounded-full cursor-pointer bg-(--secondary)/10 text-(--primary) flex items-center justify-center group-hover:bg-(--secondary)/50 group-hover:text-white transition-colors'>
+                              <ExternalLink size={18} />
+                            </button>
+                          </div>
+                          <p className='mt-2 text-base leading-relaxed font-amiri'>﴿ {item.verseText || ''} ﴾</p>
                         </Link>
-                      </div>
-                    </motion.div>
-                  ))
+                      </motion.div>
+                    );
+                  })
                 )}
               </AnimatePresence>
             </div>

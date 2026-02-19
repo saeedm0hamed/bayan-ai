@@ -9,6 +9,8 @@ export interface HistoryItem {
   surahNumber: string;
   ayahNumber: string;
   confidence?: number;
+  verseText?: string;
+  similarity?: number;
 }
 
 const HISTORY_COOKIE_KEY = 'bayan_history';
