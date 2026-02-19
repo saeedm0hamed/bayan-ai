@@ -34,8 +34,8 @@ export default function ResultPage() {
       formData.append('file', audioFile);
 
       try {
-        // const response = await fetch('https://sae8d-bayan-ai.hf.space/recognize', {
-        const response = await fetch('http://localhost:8000/recognize', {
+        const response = await fetch('https://sae8d-bayan-ai.hf.space/recognize', {
+          // const response = await fetch('http://localhost:8000/recognize', {
           method: 'POST',
           body: formData,
         });
@@ -91,6 +91,32 @@ export default function ResultPage() {
 
     uploadAudio();
   }, [audioFile, router]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!loading && result && !error) {
+      const win = window as typeof window & { webkitAudioContext?: typeof AudioContext };
+      const AudioContextClass = win.AudioContext || win.webkitAudioContext;
+      if (!AudioContextClass) return;
+      const audioContext = new AudioContextClass();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.25);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.25);
+      oscillator.onended = () => {
+        gainNode.disconnect();
+        oscillator.disconnect();
+        audioContext.close();
+      };
+    }
+  }, [loading, result, error]);
 
   return (
     <main className='flex flex-col items-center min-h-screen px-6 py-18 text-foreground bg-background font-readex'>

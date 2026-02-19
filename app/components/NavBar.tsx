@@ -1,4 +1,4 @@
-import { History, Download, FlaskConical } from 'lucide-react';
+import { History, Download, FlaskConical, Menu } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -14,6 +14,7 @@ const NavBar = () => {
   const router = useRouter();
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -64,19 +65,39 @@ const NavBar = () => {
   };
 
   return (
-    <header className='absolute px-12 py-6 top-0 w-full flex items-center justify-between text-sm text-muted-foreground'>
+    <header className='absolute px-6 md:px-12 py-6 top-0 w-full flex items-center justify-between text-sm text-muted-foreground'>
       <div className='flex items-center gap-2'>
         <button className='flex items-center gap-2 p-2 rounded-full text-muted-foreground transition duration-300 ease-in-out bg-muted'>
           نسخة تجريبية
           <FlaskConical size={20} />
         </button>
-        <button
-          className='flex items-center gap-2 p-2 rounded-full hover:text-foreground transition duration-300 ease-in-out cursor-pointer hover:bg-muted hover:scale-105'
-          onClick={() => router.push('/history')}
-        >
-          <History size={20} className='dark:text-foreground' />
-        </button>
-        <ThemeToggle />
+
+        <div className='relative'>
+          <button
+            className='flex items-center gap-2 p-2 rounded-full hover:text-foreground transition duration-300 ease-in-out cursor-pointer hover:bg-muted hover:scale-105'
+            onClick={() => setIsMenuOpen((prev) => !prev)}
+            aria-haspopup='true'
+            aria-expanded={isMenuOpen}
+          >
+            <Menu size={20} className='dark:text-foreground' />
+          </button>
+          {isMenuOpen && (
+            <div className='absolute z-50 mt-2 flex flex-col gap-2 p-2 rounded-2xl bg-background border border-border shadow-lg'>
+              <button
+                className='flex items-center gap-2 p-2 rounded-full hover:text-foreground transition duration-300 ease-in-out cursor-pointer hover:bg-muted hover:scale-105'
+                onClick={() => {
+                  router.push('/history');
+                  setIsMenuOpen(false);
+                }}
+              >
+                <History size={20} className='dark:text-foreground' />
+              </button>
+              <div className='flex items-center justify-center'>
+                <ThemeToggle />
+              </div>
+            </div>
+          )}
+        </div>
         <button
           className='flex items-center gap-2 p-2 rounded-full hover:text-foreground transition duration-300 ease-in-out cursor-pointer hover:bg-muted hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-default'
           onClick={handleInstallClick}

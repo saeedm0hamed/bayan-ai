@@ -20,6 +20,7 @@ export default function Home() {
   const animationRef = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const systemStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -33,14 +34,30 @@ export default function Home() {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const micStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
         },
       });
-      streamRef.current = stream;
+      streamRef.current = micStream;
+
+      let systemStream: MediaStream | null = null;
+      try {
+        const mediaDevices = navigator.mediaDevices as MediaDevices & {
+          getDisplayMedia?: (constraints?: MediaStreamConstraints) => Promise<MediaStream>;
+        };
+        if (typeof mediaDevices.getDisplayMedia === 'function') {
+          systemStream = await mediaDevices.getDisplayMedia({
+            audio: true,
+            video: true,
+          });
+        }
+      } catch {
+        systemStream = null;
+      }
+      systemStreamRef.current = systemStream;
 
       // Setup AudioContext for visualization and processing
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -51,7 +68,14 @@ export default function Home() {
       analyser.fftSize = 256;
       analyserRef.current = analyser;
 
-      const source = audioContext.createMediaStreamSource(stream);
+      const mix = audioContext.createGain();
+      const micSource = audioContext.createMediaStreamSource(micStream);
+      micSource.connect(mix);
+
+      if (systemStream && systemStream.getAudioTracks().length > 0) {
+        const systemSource = audioContext.createMediaStreamSource(systemStream);
+        systemSource.connect(mix);
+      }
 
       // Noise reduction filters
       const hpFilter = audioContext.createBiquadFilter();
@@ -66,7 +90,7 @@ export default function Home() {
       const destination = audioContext.createMediaStreamDestination();
 
       // Connect: Source -> HP Filter -> LP Filter -> Analyser & Destination
-      source.connect(hpFilter);
+      mix.connect(hpFilter);
       hpFilter.connect(lpFilter);
       lpFilter.connect(analyser);
       lpFilter.connect(destination);
@@ -123,9 +147,15 @@ export default function Home() {
 
     if (audioContextRef.current) {
       audioContextRef.current.close();
+      audioContextRef.current = null;
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (systemStreamRef.current) {
+      systemStreamRef.current.getTracks().forEach((track) => track.stop());
+      systemStreamRef.current = null;
     }
     setIsRecording(false);
   };
@@ -227,7 +257,7 @@ export default function Home() {
       </div> */}
 
       {/* Center content */}
-      <section className='flex flex-col items-center justify-center py-12 text-center'>
+      <section className='flex flex-col items-center justify-center pb-32 mb-6 text-center'>
         <div className='relative p-5'>
           <div className='relative flex flex-row-reverse p-5'>
             <h1 className='text-[2.6rem] md:text-6xl text-nowrap text-(--primary) font-amiri'>
@@ -260,19 +290,22 @@ export default function Home() {
                 className='relative flex items-center justify-center hover:cursor-pointer group'
                 onClick={startRecording}
               >
-                <div className='absolute w-40 h-40 group-hover:scale-110 transition-all duration-500 ease-in-out rounded-full border border-dashed border-(--primary)' />
+                <div className='absolute w-45 h-45 group-hover:scale-110 transition-all duration-500 ease-in-out rounded-full border border-dashed border-(--primary)' />
                 <div className='absolute w-40 h-40 group-hover:scale-140 transition-all duration-400 ease-in-out rounded-full border border-dashed border-(--secondary)' />
                 <motion.button
                   layoutId='mic-button'
-                  className='w-36 h-36 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'
+                  className='w-40 h-40 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'
                 >
                   <div className='flex items-center justify-center h-10'>
                     <Mic size={40} className='text-white' />
                   </div>
-                  <div className='flex flex-col items-center justify-center h-10 text-white'>
+                  <div className='flex flex-col h-10 gap-2 text-base font-medium text-white '>
                     <motion.p layoutId='mic-text' className='text-base font-medium text-white'>
                       تسجيل مباشر
                     </motion.p>
+                    <span className='text-xs text-white/60 text-balance' dir='rtl'>
+                      (يدعم صوت القرآن في الخلفية)
+                    </span>
                   </div>
                 </motion.button>
 
@@ -302,8 +335,7 @@ export default function Home() {
       </AnimatePresence> */}
               </motion.div>
             )}
-
-            <div className='absolute right-auto bottom-[-10] md:bottom-[-35] flex items-center justify-center rounded-2xl px-2 py-1 border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs transition duration-200'>
+            <div className='absolute right-auto bottom-[-10] md:bottom-[-30] flex items-center justify-center rounded-2xl px-2 py-1 border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs transition duration-200'>
               <p>حد أقصى 60 ثانية</p>
               <span className='w-1.5 h-1.5 rounded-full bg-yellow-400 mx-1 inline-block' />
             </div>
@@ -324,7 +356,7 @@ export default function Home() {
             className='relative flex items-center justify-center p-5 hover:cursor-pointer group'
             onClick={() => fileInputRef.current?.click()}
           >
-            <div className='absolute w-40 h-40 group-hover:scale-110 transition-all duration-500 ease-in-out rounded-full border border-dashed border-(--primary)' />
+            <div className='absolute w-45 h-45 group-hover:scale-110 transition-all duration-500 ease-in-out rounded-full border border-dashed border-(--primary)' />
             <div className='absolute w-40 h-40 group-hover:scale-140 transition-all duration-400 ease-in-out rounded-full border border-dashed border-(--secondary)' />
             <input
               type='file'
@@ -333,7 +365,7 @@ export default function Home() {
               accept='audio/*,video/*'
               onChange={handleFileUpload}
             />
-            <button className='w-36 h-36 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'>
+            <button className='w-40 h-40 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'>
               <div className='flex items-center justify-center h-10'>
                 <Upload size={40} className='text-white' />
               </div>
@@ -380,7 +412,7 @@ export default function Home() {
         )}
       </AnimatePresence>
       {/* Footer stats */}
-      <footer className='w-full max-w-xl pt-6 text-sm text-center items-center text-gray-500 border-t border-gray-500'>
+      {/* <footer className='w-full max-w-xl pt-6 text-sm text-center items-center text-gray-500 border-t border-gray-500'>
         <div className='flex justify-between items-center'>
           <div>
             <p className='text-xs'>سرعة المعالجة</p>
@@ -397,7 +429,7 @@ export default function Home() {
             <p className='font-medium'>99.8%</p>
           </div>
         </div>
-      </footer>
+      </footer> */}
     </main>
   );
 }
