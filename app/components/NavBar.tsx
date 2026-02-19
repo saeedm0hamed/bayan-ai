@@ -66,7 +66,7 @@ const NavBar = () => {
   return (
     <header className='absolute px-12 py-6 top-0 w-full flex items-center justify-between text-sm text-muted-foreground'>
       <div className='flex items-center gap-2'>
-        <button className='flex items-center gap-2 p-2 rounded-full text-foreground transition duration-300 ease-in-out bg-muted'>
+        <button className='flex items-center gap-2 p-2 rounded-full text-muted-foreground transition duration-300 ease-in-out bg-muted'>
           نسخة تجريبية
           <FlaskConical size={20} />
         </button>
