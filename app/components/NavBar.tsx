@@ -1,8 +1,9 @@
-import { History, Download, FlaskConical, Menu } from 'lucide-react';
+import { History, Download, FlaskConical, Menu, Sun, Moon, Info } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ThemeToggle } from './ThemeToggle';
+import { useTheme } from '../context/ThemeContext';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -15,6 +16,7 @@ const NavBar = () => {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { resolvedTheme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -81,22 +83,50 @@ const NavBar = () => {
           >
             <Menu size={20} className='dark:text-foreground' />
           </button>
-          {isMenuOpen && (
-            <div className='absolute z-50 mt-2 flex flex-col gap-2 p-2 rounded-2xl bg-background border border-border shadow-lg'>
-              <button
-                className='flex items-center gap-2 p-2 rounded-full hover:text-foreground transition duration-300 ease-in-out cursor-pointer hover:bg-muted hover:scale-105'
-                onClick={() => {
-                  router.push('/history');
-                  setIsMenuOpen(false);
-                }}
+          <AnimatePresence>
+            {isMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className='absolute z-50 mt-2 flex flex-col gap-2 p-2 dark:bg-muted rounded-2xl bg-background border border-border shadow-lg origin-top'
               >
-                <History size={20} className='dark:text-foreground' />
-              </button>
-              <div className='flex items-center justify-center'>
-                <ThemeToggle />
-              </div>
-            </div>
-          )}
+                {/* Theme toggle */}
+                <button
+                  className='flex items-center gap-3 p-2 rounded-full hover:text-foreground transition duration-300 ease-in-out cursor-pointer hover:bg-muted hover:scale-105 w-full min-w-[180px]'
+                  onClick={toggleTheme} 
+                >
+                  <span className='flex-1 text-right'>
+                    {resolvedTheme === 'dark' ? 'الوضع الفاتح' : 'الوضع الداكن'}
+                  </span>
+                  {resolvedTheme === 'dark' ? (
+                    <Sun size={20} className='text-foreground shrink-0' />
+                  ) : (
+                    <Moon size={20} className='shrink-0' />
+                  )}
+                </button>
+
+                {/* History */}
+                <button
+                  className='flex items-center gap-3 p-2 rounded-full hover:text-foreground transition duration-300 ease-in-out cursor-pointer hover:bg-muted hover:scale-105 w-full min-w-[180px]'
+                  onClick={() => {
+                    router.push('/history');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <span className='flex-1 text-right'>السجل</span>
+                  <History size={20} className='dark:text-foreground shrink-0' />
+                </button>
+
+                {/* About */}
+                <button className='flex items-center gap-3 p-2 rounded-full hover:text-foreground transition duration-300 ease-in-out cursor-pointer hover:bg-muted hover:scale-105 w-full min-w-[180px]'>
+                  <span className='flex-1 text-right'>حول التطبيق</span>
+                  <Info size={20} className='dark:text-foreground shrink-0' />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         <button
           className='flex items-center gap-2 p-2 rounded-full hover:text-foreground transition duration-300 ease-in-out cursor-pointer hover:bg-muted hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-default'

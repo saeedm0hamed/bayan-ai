@@ -233,7 +233,7 @@ export default function Home() {
     <main className='relative flex flex-col items-center justify-between min-h-screen px-6 py-6 text-foreground bg-background font-readex'>
       <NavBar />
 
-      <div className='hidden w-full md:flex justify-start mt-24 px-6'>
+      <div className='hidden w-full md:flex justify-end mt-24 px-6'>
         <div className='w-full md:absolute max-w-sm'>
           <DisclaimerCard />
         </div>
@@ -257,7 +257,7 @@ export default function Home() {
       </div> */}
 
       {/* Center content */}
-      <section className='flex flex-col items-center justify-center pb-32 mb-6 text-center'>
+      <section className='flex flex-col items-center justify-center flex-1 text-center -mt-6 md:-mt-10 lg:-mt-48'>
         <div className='relative p-5'>
           <div className='relative flex flex-row-reverse p-5'>
             <h1 className='text-[2.6rem] md:text-6xl text-nowrap text-(--primary) font-amiri'>
