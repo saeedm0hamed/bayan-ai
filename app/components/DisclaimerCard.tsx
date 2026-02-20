@@ -1,7 +1,24 @@
+'use client';
+
 import { AlertCircle, ShieldCheck, ChartColumn } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { getSurahRecognizedCount } from '../../lib/firebase';
 
 const DisclaimerCard = () => {
+  const [totalRecognitions, setTotalRecognitions] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const count = await getSurahRecognizedCount();
+        setTotalRecognitions(count);
+      } catch {
+        setTotalRecognitions(null);
+      }
+    };
+    void fetchStats();
+  }, []);
+
   return (
     <div className='w-full p-4 md:p-5 text-right bg-white/80 dark:bg-muted backdrop-blur-sm rounded-2xl border border-border/70 shadow-md text-card-foreground text-xs md:text-sm'>
       <div className='flex items-center gap-2 mb-2' dir='rtl'>
@@ -48,15 +65,15 @@ const DisclaimerCard = () => {
         <p className='text-xs font-semibold text-foreground/80'>إحصائيات</p>
       </div>
       <div className='flex flex-wrap gap-2 mt-2 text-[0.7rem]' dir='rtl'>
-        {/* <span className='px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'>
-          v0.1
+        <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200'>
+          سور تم التعرف عليها بإستخدام بيان حتى الآن : {totalRecognitions !== null ? totalRecognitions : '–—'}
         </span>
-        <span className='px-2 py-1 rounded-full bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300'>
-          متوسط دقة المطابقة ~ 95٪ (بيانات تجريبية)
+        <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200'>
+          متوسط دقة المطابقة ~ 95٪
         </span>
-        <span className='px-2 py-1 rounded-full dark:text-muted-foreground bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200'>
-          متوسط سرعة المعالجة ~ 3 ث (بيانات تجريبية)
-        </span> */}
+        <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200'>
+          متوسط سرعة المعالجة ~ 3 ث
+        </span>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAnalytics, isSupported, logEvent, type Analytics } from 'firebase/analytics';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyBpACa7EPg0HeBJffTPzxkvp-CIewX5jLU',
@@ -13,30 +14,43 @@ const firebaseConfig = {
   measurementId: 'G-QNMR5F4S9Q',
 };
 
+const getFirebaseApp = () => (getApps().length ? getApp() : initializeApp(firebaseConfig));
+
 let analyticsInstance: Analytics | null = null;
-let initializationPromise: Promise<Analytics | null> | null = null;
+let analyticsInitializationPromise: Promise<Analytics | null> | null = null;
+let firestoreInstance: Firestore | null = null;
 
 const getAnalyticsInstance = async (): Promise<Analytics | null> => {
   if (analyticsInstance) {
     return analyticsInstance;
   }
 
-  if (initializationPromise) {
-    return initializationPromise;
+  if (analyticsInitializationPromise) {
+    return analyticsInitializationPromise;
   }
 
-  initializationPromise = (async () => {
+  analyticsInitializationPromise = (async () => {
     const supported = await isSupported().catch(() => false);
     if (!supported) {
       return null;
     }
 
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const app = getFirebaseApp();
     analyticsInstance = getAnalytics(app);
     return analyticsInstance;
   })();
 
-  return initializationPromise;
+  return analyticsInitializationPromise;
+};
+
+const getFirestoreInstance = (): Firestore => {
+  if (firestoreInstance) {
+    return firestoreInstance;
+  }
+
+  const app = getFirebaseApp();
+  firestoreInstance = getFirestore(app);
+  return firestoreInstance;
 };
 
 export interface SurahRecognizedEventParams {
@@ -55,16 +69,58 @@ export const logSurahRecognized = async (params: SurahRecognizedEventParams): Pr
       return;
     }
 
-    logEvent(analytics, 'surah_recognized', {
+    const payload = {
       surah: params.surah,
       surah_number: params.surahNumber,
       ayah_number: params.ayahNumber,
       confidence: params.confidence,
       duration: params.duration,
       similarity: params.similarity,
+      debug_mode: process.env.NODE_ENV === 'development',
+    };
+
+    logEvent(analytics, 'surah_recognized', {
+      surah: payload.surah,
+      surah_number: payload.surah_number,
+      ayah_number: payload.ayah_number,
+      confidence: payload.confidence,
+      duration: payload.duration,
+      similarity: payload.similarity,
+      debug_mode: payload.debug_mode,
     });
   } catch {
     // Ignore analytics errors
   }
 };
 
+const SURAH_STATS_COLLECTION = 'stats';
+const SURAH_STATS_DOCUMENT = 'global';
+
+export const incrementSurahRecognizedCount = async (): Promise<void> => {
+  const db = getFirestoreInstance();
+  const ref = doc(db, SURAH_STATS_COLLECTION, SURAH_STATS_DOCUMENT);
+  try {
+    await updateDoc(ref, {
+      surah_recognized_count: increment(1),
+    });
+  } catch {
+    await setDoc(
+      ref,
+      {
+        surah_recognized_count: increment(1),
+      },
+      { merge: true },
+    );
+  }
+};
+
+export const getSurahRecognizedCount = async (): Promise<number> => {
+  const db = getFirestoreInstance();
+  const ref = doc(db, SURAH_STATS_COLLECTION, SURAH_STATS_DOCUMENT);
+  const snapshot = await getDoc(ref);
+  if (!snapshot.exists()) {
+    return 0;
+  }
+  const data = snapshot.data() as { surah_recognized_count?: number } | undefined;
+  return data?.surah_recognized_count ?? 0;
+};

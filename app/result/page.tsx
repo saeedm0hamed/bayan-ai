@@ -9,7 +9,7 @@ import { CheckCircle, XCircle, ArrowLeft, Hash, ScrollText, Target, Loader2, Cir
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { addToHistory } from '../../utils/history';
-import { logSurahRecognized } from '../../lib/firebase';
+import { logSurahRecognized, incrementSurahRecognizedCount, getSurahRecognizedCount } from '../../lib/firebase';
 
 export default function ResultPage() {
   const { audioFile } = useAudio();
@@ -17,6 +17,7 @@ export default function ResultPage() {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [totalRecognitions, setTotalRecognitions] = useState<number | null>(null);
 
   const matches = useMemo(() => {
     if (!result) return [];
@@ -153,6 +154,13 @@ export default function ResultPage() {
           duration: durationStr,
           similarity,
         });
+
+        try {
+          await incrementSurahRecognizedCount();
+          const count = await getSurahRecognizedCount();
+          setTotalRecognitions(count);
+        } catch {
+        }
       } catch (err) {
         console.error('Upload failed:', err);
         setError('حدث خطأ أثناء معالجة الملف. يرجى المحاولة مرة أخرى.');
@@ -250,7 +258,7 @@ export default function ResultPage() {
                     <XCircle className='w-4 h-4' />
                     <p>يرجى المحاولة بصوت أعلى وأوضح</p>
                   </div>
-                ) : matches ? (
+                ) : matches.length > 1 ? (
                   <div className='flex items-center gap-2 rounded-full px-4 py-1.5 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-600 text-sm'>
                     <CircleEllipsis className='w-4 h-4' />
                     <p>تم التعرف على أكثر من سورة مطابقة بنجاح</p>
@@ -284,7 +292,7 @@ export default function ResultPage() {
                 </p> */}
 
                 {/* Meta Info */}
-                <div className='flex gap-6 mt-2'>
+                <div className='flex gap-6 mt-2 flex-wrap justify-center'>
                   <div className='flex flex-col items-center gap-1 text-sm'>
                     <div className='flex items-center justify-center bg-primary/20 rounded-full w-9 h-9'>
                       <ScrollText className='w-4 h-4 text-primary' />
@@ -312,6 +320,16 @@ export default function ResultPage() {
                     <p className='text-muted-foreground'>الدقة</p>
                     <p className={`font-semibold ${isLowSimilarity ? 'text-amber-600' : ''}`}>{similarityPercent}%</p>
                   </div>
+
+                  {totalRecognitions !== null && (
+                    <div className='flex flex-col items-center gap-1 text-sm'>
+                      <div className='flex items-center justify-center bg-primary/20 rounded-full w-9 h-9'>
+                        <Hash className='w-4 h-4 text-primary' />
+                      </div>
+                      <p className='text-muted-foreground'>إجمالي مرات التعرف</p>
+                      <p className='font-semibold'>{totalRecognitions}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Primary Action */}
