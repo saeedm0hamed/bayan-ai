@@ -1,24 +1,109 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { getHistory, clearHistory, HistoryItem } from '../../utils/history';
+import { db, ensureAnonymousUser } from '@/lib/firebase';
+import { collection, doc, getDocs, orderBy, query, writeBatch } from 'firebase/firestore';
 import NavBar from '../components/NavBar';
+
+type HistoryItem = {
+  id: string;
+  surah: string;
+  ayahNumber: number;
+  similarity?: number;
+  verseText?: string;
+  surahNumber: number;
+};
 
 export default function HistoryPage() {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
 
   useEffect(() => {
-    setHistoryItems(getHistory());
+    const loadHistory = async () => {
+      try {
+        const user = await ensureAnonymousUser();
+        if (!user) {
+          setHistoryItems([]);
+          return;
+        }
+
+        const statsDocRef = doc(db, 'stats', 'global');
+        const sessionsDocRef = doc(collection(statsDocRef, 'sessions'), user.uid);
+        const recognitionsCollectionRef = collection(sessionsDocRef, 'recognitions');
+
+        const q = query(recognitionsCollectionRef, orderBy('timestamp', 'desc'));
+        const snapshot = await getDocs(q);
+
+        const items: HistoryItem[] = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data() as {
+            surah?: number;
+            surah_name?: string;
+            ayah?: number;
+            accuracy?: number;
+            verse_text?: string;
+          };
+
+          let surahDisplay = '';
+          if (data.surah_name) {
+            const match = data.surah_name.match(/\(([^)]+)\)/);
+            surahDisplay = match ? match[1] : data.surah_name;
+          } else if (typeof data.surah === 'number') {
+            surahDisplay = String(data.surah);
+          }
+
+          return {
+            id: docSnap.id,
+            surah: surahDisplay,
+            surahNumber: typeof data.surah === 'number' ? data.surah : 0,
+            ayahNumber: data.ayah ?? 0,
+            similarity: typeof data.accuracy === 'number' ? data.accuracy : undefined,
+            verseText: data.verse_text,
+          };
+        });
+
+        setHistoryItems(items);
+      } catch (e) {
+        console.error('Failed to load history from Firestore', e);
+        setHistoryItems([]);
+      }
+    };
+
+    loadHistory();
   }, []);
 
-  const handleClearHistory = () => {
-    if (confirm('هل أنت متأكد من مسح سجل السور')) {
-      clearHistory();
+  const handleClearHistory = async () => {
+    if (!confirm('هل أنت متأكد من مسح سجل السور')) {
+      return;
+    }
+
+    try {
+      const user = await ensureAnonymousUser();
+      if (!user) {
+        setHistoryItems([]);
+        return;
+      }
+
+      const statsDocRef = doc(db, 'stats', 'global');
+      const sessionsDocRef = doc(collection(statsDocRef, 'sessions'), user.uid);
+      const recognitionsCollectionRef = collection(sessionsDocRef, 'recognitions');
+
+      const snapshot = await getDocs(recognitionsCollectionRef);
+      if (snapshot.empty) {
+        setHistoryItems([]);
+        return;
+      }
+
+      const batch = writeBatch(db);
+      snapshot.docs.forEach((docSnap) => {
+        batch.delete(docSnap.ref);
+      });
+
+      await batch.commit();
       setHistoryItems([]);
+    } catch (e) {
+      console.error('Failed to clear history from Firestore', e);
     }
   };
 

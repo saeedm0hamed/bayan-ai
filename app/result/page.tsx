@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAudio } from '../context/AudioContext';
 import NavBar from '../components/NavBar';
 import { CheckCircle, XCircle, ArrowLeft, Hash, ScrollText, Target, Loader2, AlertCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
-import { addToHistory } from '../../utils/history';
 import { db, ensureAnonymousUser } from '@/lib/firebase';
 import { collection, doc, runTransaction, serverTimestamp } from 'firebase/firestore';
 
@@ -47,6 +46,8 @@ export default function ResultPage() {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<RecognitionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const hasUploadedRef = useRef(false);
+  const hasPlayedRef = useRef(false);
 
   const saveRecognitionStats = async (data: RecognitionResult) => {
     try {
@@ -113,6 +114,16 @@ export default function ResultPage() {
         const sessionAvgAccuracy =
           sessionTotalRecognitions > 0 ? sessionTotalAccuracySum / sessionTotalRecognitions : 0;
 
+        const surahName =
+          data.surah_name ||
+          data.possible_match?.surah_name ||
+          '';
+
+        const verseText =
+          data.verse_text ||
+          data.possible_match?.verse_text ||
+          '';
+
         transaction.set(
           statsDocRef,
           {
@@ -144,6 +155,8 @@ export default function ResultPage() {
           surah: surahNumber,
           ayah: ayahNumber,
           accuracy,
+          surah_name: surahName,
+          verse_text: verseText,
           timestamp: serverTimestamp(),
         });
       });
@@ -164,6 +177,11 @@ export default function ResultPage() {
       return;
     }
 
+    if (hasUploadedRef.current) {
+      return;
+    }
+    hasUploadedRef.current = true;
+
     const uploadAudio = async () => {
       const formData = new FormData();
       formData.append('file', audioFile);
@@ -182,41 +200,6 @@ export default function ResultPage() {
         const data: RecognitionResult = await response.json();
         setResult(data);
 
-        // Get media duration (works for both audio and video)
-        let durationStr = '0 ث';
-        try {
-          const media = document.createElement(audioFile.type.startsWith('video/') ? 'video' : 'audio');
-          media.src = URL.createObjectURL(audioFile);
-          await new Promise((resolve) => {
-            media.onloadedmetadata = () => {
-              const seconds = Math.round(media.duration);
-              durationStr = `${seconds} ث`;
-              URL.revokeObjectURL(media.src);
-              resolve(null);
-            };
-            media.onerror = () => {
-              URL.revokeObjectURL(media.src);
-              resolve(null);
-            };
-          });
-        } catch (e) {
-          console.error('Error getting duration', e);
-        }
-
-        // Add to history
-        // Assuming data structure based on typical API response, modify if needed
-        const confidence = data.confidence || 0;
-
-        addToHistory({
-          surah: data.surah_name
-            ? data.surah_name.match(/\(([^)]+)\)/)[1]
-            : data.possible_match.surah_name.match(/\(([^)]+)\)/)[1],
-          duration: durationStr,
-          surahNumber: data.surah_number || data.possible_match.surah_number,
-          ayahNumber: data.ayah_number || data.possible_match.ayah_number,
-          confidence: confidence,
-        });
-
         await saveRecognitionStats(data);
       } catch (err) {
         console.error('Upload failed:', err);
@@ -231,7 +214,8 @@ export default function ResultPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!loading && result && !error) {
+    if (!loading && result && !error && !hasPlayedRef.current) {
+      hasPlayedRef.current = true;
       const win = window as typeof window & { webkitAudioContext?: typeof AudioContext };
       const AudioContextClass = win.AudioContext || win.webkitAudioContext;
       if (!AudioContextClass) return;
