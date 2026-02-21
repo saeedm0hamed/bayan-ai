@@ -49,6 +49,26 @@ export default function ResultPage() {
   const hasUploadedRef = useRef(false);
   const hasPlayedRef = useRef(false);
 
+  const effectiveSurahName =
+    result?.surah_name ?? result?.possible_match?.surah_name ?? '';
+  const effectiveVerseText =
+    result?.verse_text ?? result?.possible_match?.verse_text ?? '';
+  const effectiveSurahNumber =
+    result?.surah_number ?? result?.possible_match?.surah_number;
+  const effectiveAyahNumber =
+    result?.ayah_number ?? result?.possible_match?.ayah_number;
+  const effectiveSimilarityScore =
+    result?.similarity_score ??
+    result?.best_similarity ??
+    result?.possible_match?.similarity_score ??
+    0;
+
+  const surahNameMatch = effectiveSurahName.match(/\(([^)]+)\)/);
+  const displaySurahName = surahNameMatch ? surahNameMatch[1] : effectiveSurahName || 'غير معروفة';
+
+  const accuracyPercentage = Math.round(effectiveSimilarityScore * 100);
+  const displayAccuracy = Number.isNaN(accuracyPercentage) ? 0 : accuracyPercentage;
+
   const saveRecognitionStats = async (data: RecognitionResult) => {
     try {
       const user = await ensureAnonymousUser();
@@ -84,12 +104,14 @@ export default function ResultPage() {
         totalRecognitions += 1;
         totalAccuracySum += accuracy;
 
-        const surahKey = String(surahNumber);
-        const newCount = (surahCounts[surahKey] || 0) + 1;
-        surahCounts[surahKey] = newCount;
+        if (typeof surahNumber === 'number') {
+          const surahKey = String(surahNumber);
+          const newCount = (surahCounts[surahKey] || 0) + 1;
+          surahCounts[surahKey] = newCount;
 
-        if (!mostCommonSurah || newCount > mostCommonSurah.count) {
-          mostCommonSurah = { surah: surahNumber, count: newCount };
+          if (!mostCommonSurah || newCount > mostCommonSurah.count) {
+            mostCommonSurah = { surah: surahNumber, count: newCount };
+          }
         }
 
         const avgAccuracy = totalRecognitions > 0 ? totalAccuracySum / totalRecognitions : 0;
@@ -114,15 +136,9 @@ export default function ResultPage() {
         const sessionAvgAccuracy =
           sessionTotalRecognitions > 0 ? sessionTotalAccuracySum / sessionTotalRecognitions : 0;
 
-        const surahName =
-          data.surah_name ||
-          data.possible_match?.surah_name ||
-          '';
+        const surahName = data.surah_name || data.possible_match?.surah_name || '';
 
-        const verseText =
-          data.verse_text ||
-          data.possible_match?.verse_text ||
-          '';
+        const verseText = data.verse_text || data.possible_match?.verse_text || '';
 
         transaction.set(
           statsDocRef,
@@ -167,7 +183,11 @@ export default function ResultPage() {
 
   const isLowSimilarity = useMemo(() => {
     if (!result) return false;
-    const score = result.similarity_score || result.best_similarity || result.possible_match.similarity_score;
+    const score =
+      result.similarity_score ??
+      result.best_similarity ??
+      result.possible_match?.similarity_score ??
+      0;
     return isNaN(score) || score < 0.5;
   }, [result]);
 
@@ -187,8 +207,8 @@ export default function ResultPage() {
       formData.append('file', audioFile);
 
       try {
-        // const response = await fetch('https://sae8d-bayan-ai.hf.space/recognize', {
-        const response = await fetch('http://localhost:8000/recognize', {
+        const response = await fetch('https://sae8d-bayan-ai.hf.space/recognize', {
+          // const response = await fetch('http://localhost:8000/recognize', {
           method: 'POST',
           body: formData,
         });
@@ -306,20 +326,16 @@ export default function ResultPage() {
                   </div>
                 )}
 
-                {/* Surah Name */}
                 <h2 className='text-4xl md:text-6xl text-(--primary) font-amiri mt-4' dir='rtl'>
                   سورة{' '}
-                  {result.surah_name
-                    ? result.surah_name.match(/\(([^)]+)\)/)[1]
-                    : result.possible_match.surah_name.match(/\(([^)]+)\)/)[1]}
+                  {displaySurahName}
                 </h2>
 
-                {/* Verse */}
                 <p
                   className='w-full px-6 py-6 mt-6 text-xl leading-loose shadow-inner rounded-2xl bg-muted md:text-2xl font-amiri'
                   dir='rtl'
                 >
-                  ﴿ {result.verse_text || result.possible_match.verse_text} ﴾
+                  ﴿ {effectiveVerseText} ﴾
                 </p>
 
                 {/* Transcription */}
@@ -337,7 +353,7 @@ export default function ResultPage() {
                       <ScrollText className='w-4 h-4 text-primary' />
                     </div>
                     <p className='text-muted-foreground'>رقم السورة</p>
-                    <p className='font-semibold'>{result.surah_number || result.possible_match.surah_number}</p>
+                    <p className='font-semibold'>{effectiveSurahNumber ?? '-'}</p>
                   </div>
 
                   <div className='flex flex-col items-center gap-1 text-sm'>
@@ -345,7 +361,7 @@ export default function ResultPage() {
                       <Hash className='w-4 h-4 text-primary' />
                     </div>
                     <p className='text-muted-foreground'>رقم الآية</p>
-                    <p className='font-semibold'>{result.ayah_number || result.possible_match.ayah_number}</p>
+                    <p className='font-semibold'>{effectiveAyahNumber ?? '-'}</p>
                   </div>
 
                   <div className='flex flex-col items-center gap-1 text-sm'>
@@ -353,23 +369,18 @@ export default function ResultPage() {
                       <Target className='w-4 h-4 text-primary' />
                     </div>
                     <p className='text-muted-foreground'>الدقة</p>
-                    <p className={`font-semibold ${isLowSimilarity ? 'text-amber-600' : ''}`}>
-                      {isNaN(
-                        result.similarity_score || result.best_similarity || result.possible_match.similarity_score,
-                      )
-                        ? '0'
-                        : Math.round(result.similarity_score * 100) ||
-                          Math.round(result.best_similarity * 100) ||
-                          Math.round(result.possible_match.similarity_score * 100)}
-                      %
-                    </p>
+                    <p className={`font-semibold ${isLowSimilarity ? 'text-amber-600' : ''}`}>{displayAccuracy}%</p>
                   </div>
                 </div>
 
                 {/* Primary Action */}
                 <Link
                   target='_blank'
-                  href={`https://quran.com/${result.surah_number ? result.surah_number : result.possible_match.surah_number}?startingVerse=${result.ayah_number ? result.ayah_number : result.possible_match.ayah_number}`}
+                  href={
+                    effectiveSurahNumber && effectiveAyahNumber
+                      ? `https://quran.com/${effectiveSurahNumber}?startingVerse=${effectiveAyahNumber}`
+                      : 'https://quran.com'
+                  }
                   className='mt-6 w-full md:w-auto px-10 py-4 rounded-full text-white text-lg font-semibold bg-(--primary) cursor-pointer hover:scale-105 transition shadow-lg'
                 >
                   قراءة السورة
