@@ -323,13 +323,13 @@ export default function ResultPage() {
                     <p>يرجى المحاولة بصوت أعلى وأوضح</p>
                   </div>
                 ) : (
-                  <div className='flex items-center gap-2 rounded-full px-4 py-1.5  text-green-700 border border-green-600 bg-green-100 text-sm'>
+                  <div className='flex items-center gap-2 rounded-full px-4 py-1.5 text-green-700 border border-green-600 bg-green-100 text-sm'>
                     <CheckCircle className='w-4 h-4' />
                     <p>تم التعرف على السورة</p>
                   </div>
                 )}
 
-                <h2 className='text-4xl md:text-6xl text-black dark:invert font-amiri mt-4' dir='rtl'>
+                <h2 className='text-4xl md:text-6xl text-foreground font-amiri mt-4' dir='rtl'>
                   سورة {displaySurahName}
                 </h2>
 

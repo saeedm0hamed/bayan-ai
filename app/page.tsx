@@ -317,7 +317,7 @@ export default function Home() {
           className='relative p-5'
         >
           <div className='relative flex flex-row-reverse p-5'>
-            <h1 className='text-[2.8rem] sm:text-[2.6rem] md:text-6xl text-nowrap text-(--primary) font-amiri'>
+            <h1 className='text-[2.8rem] sm:text-[2.6rem] md:text-7xl text-nowrap text-foreground font-amiri'>
               ﴾ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴿
             </h1>
             <Link
@@ -328,7 +328,7 @@ export default function Home() {
               [المزمل: 4]
             </Link>
           </div>
-          <div className='p-2 md:p-5 md:mt-1'>
+          <div className='p-2 md:p-5 md:mt-3'>
             <p className='text-[0.6rem] md:text-xs text-muted-foreground' dir='rtl'>
               استخدم الذكاء الاصطناعي للتعرف على السور والآيات من خلال الصوت!
             </p>

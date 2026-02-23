@@ -107,7 +107,7 @@ const NavBar = () => {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: body.toString(),
-    }).catch(() => {});
+    }).catch(() => { });
 
     setSuggestionSuccess(true);
     setSuggestion('');

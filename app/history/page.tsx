@@ -181,7 +181,7 @@ export default function HistoryPage() {
                         >
                           <div className='flex items-center justify-between w-full gap-2'>
                             <p className='font-amiri text-xl'>
-                              <span className='text-(--primary)'> سورة {item.surah}</span>
+                              <span className='text-foreground'> سورة {item.surah}</span>
                               <span className='text-muted-foreground'> - آية {item.ayahNumber}</span>
                             </p>
                             <span className=' text-sm text-muted-foreground'>
