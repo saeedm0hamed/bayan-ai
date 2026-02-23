@@ -49,19 +49,12 @@ export default function ResultPage() {
   const hasUploadedRef = useRef(false);
   const hasPlayedRef = useRef(false);
 
-  const effectiveSurahName =
-    result?.surah_name ?? result?.possible_match?.surah_name ?? '';
-  const effectiveVerseText =
-    result?.verse_text ?? result?.possible_match?.verse_text ?? '';
-  const effectiveSurahNumber =
-    result?.surah_number ?? result?.possible_match?.surah_number;
-  const effectiveAyahNumber =
-    result?.ayah_number ?? result?.possible_match?.ayah_number;
+  const effectiveSurahName = result?.surah_name ?? result?.possible_match?.surah_name ?? '';
+  const effectiveVerseText = result?.verse_text ?? result?.possible_match?.verse_text ?? '';
+  const effectiveSurahNumber = result?.surah_number ?? result?.possible_match?.surah_number;
+  const effectiveAyahNumber = result?.ayah_number ?? result?.possible_match?.ayah_number;
   const effectiveSimilarityScore =
-    result?.similarity_score ??
-    result?.best_similarity ??
-    result?.possible_match?.similarity_score ??
-    0;
+    result?.similarity_score ?? result?.best_similarity ?? result?.possible_match?.similarity_score ?? 0;
 
   const surahNameMatch = effectiveSurahName.match(/\(([^)]+)\)/);
   const displaySurahName = surahNameMatch ? surahNameMatch[1] : effectiveSurahName || 'غير معروفة';
@@ -183,11 +176,7 @@ export default function ResultPage() {
 
   const isLowSimilarity = useMemo(() => {
     if (!result) return false;
-    const score =
-      result.similarity_score ??
-      result.best_similarity ??
-      result.possible_match?.similarity_score ??
-      0;
+    const score = result.similarity_score ?? result.best_similarity ?? result.possible_match?.similarity_score ?? 0;
     return isNaN(score) || score < 0.5;
   }, [result]);
 
@@ -260,10 +249,24 @@ export default function ResultPage() {
   }, [loading, result, error]);
 
   return (
-    <main className='flex flex-col items-center min-h-screen px-6 py-18 text-foreground bg-background font-readex'>
+    <main className='relative flex flex-col items-center min-h-screen px-6 py-18 text-foreground bg-background font-readex overflow-x-hidden overflow-y-hidden'>
+      {/* Layer 1: soft radial gradient base */}
+      <div className='pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_90%_55%_at_50%_0%,rgba(44,103,242,0.18),transparent)] dark:bg-[radial-gradient(ellipse_90%_55%_at_50%_0%,rgba(30,0,255,0.22),transparent)]' />
+      {/* Layer 2: large blurry blob — primary colour, top-center */}
+      <div className='pointer-events-none absolute z-[2] top-[-15%] left-1/2 -translate-x-1/2 w-[700px] h-[560px] rounded-full bg-[#2c67f2]/25 dark:bg-[#1e00ff]/20 blur-[100px]' />
+      {/* Layer 3: smaller accent blob — bottom right */}
+      <div className='pointer-events-none absolute z-[2] bottom-[-8%] right-[-8%] w-[400px] h-[360px] rounded-full bg-[#2c67f2]/15 dark:bg-[#1e00ff]/14 blur-[80px]' />
+      {/* Layer 4: subtle dot-grid texture */}
+      <div
+        className='pointer-events-none absolute inset-0 z-[3] opacity-[0.06] dark:opacity-[0.07]'
+        style={{
+          backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }}
+      />
       <NavBar />
 
-      <div className='flex flex-col items-center justify-center flex-1 w-full max-w-2xl'>
+      <div className='relative flex flex-col items-center justify-center flex-1 w-full max-w-2xl overflow-x-hidden overflow-y-hidden'>
         {loading ? (
           <AnimatePresence>
             <motion.div
@@ -320,15 +323,14 @@ export default function ResultPage() {
                     <p>يرجى المحاولة بصوت أعلى وأوضح</p>
                   </div>
                 ) : (
-                  <div className='flex items-center gap-2 rounded-full px-4 py-1.5 text-green-700 border border-green-600 bg-green-100 text-sm'>
+                  <div className='flex items-center gap-2 rounded-full px-4 py-1.5  text-green-700 border border-green-600 bg-green-100 text-sm'>
                     <CheckCircle className='w-4 h-4' />
                     <p>تم التعرف على السورة</p>
                   </div>
                 )}
 
-                <h2 className='text-4xl md:text-6xl text-(--primary) font-amiri mt-4' dir='rtl'>
-                  سورة{' '}
-                  {displaySurahName}
+                <h2 className='text-4xl md:text-6xl text-black dark:invert font-amiri mt-4' dir='rtl'>
+                  سورة {displaySurahName}
                 </h2>
 
                 <p
@@ -391,7 +393,7 @@ export default function ResultPage() {
             {/* Secondary Action */}
             <button
               onClick={() => router.push('/')}
-              className='flex items-center gap-2 text-muted-foreground transition hover:text-foreground'
+              className='flex items-center cursor-pointer gap-2 text-muted-foreground transition hover:text-foreground'
             >
               <ArrowLeft size={18} />
               <span>التعرف على سورة أخرى</span>

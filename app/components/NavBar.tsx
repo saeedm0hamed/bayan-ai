@@ -120,7 +120,7 @@ const NavBar = () => {
   };
 
   return (
-    <header className='absolute px-6 md:px-12 py-6 top-0 w-full flex items-center justify-between text-sm text-muted-foreground'>
+    <header className='fixed px-6 md:px-12 py-6 top-0 w-full flex items-center justify-between text-sm text-muted-foreground z-9999 '>
       <div className='flex items-center gap-2'>
         <button className='flex items-center gap-2 p-2 rounded-full text-muted-foreground transition duration-300 ease-in-out border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs'>
           نسخة تجريبية
@@ -247,7 +247,7 @@ const NavBar = () => {
                       ما الاقتراح أو الملاحظة التي تود مشاركتها لتحسين بيان؟
                     </label>
                     <textarea
-                      className='w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground outline-none focus:ring-2 focus:ring-(--primary) focus:border-transparent min-h-[80px] resize-none'
+                      className='w-full rounded-xl border border-border bg-background px-3 py-2 mt-2 text-xs text-foreground outline-none focus:ring-2 focus:ring-(--primary) focus:border-transparent min-h-[80px] resize-none'
                       value={suggestion}
                       onChange={(e) => setSuggestion(e.target.value)}
                       placeholder='اكتب اقتراحك هنا...'

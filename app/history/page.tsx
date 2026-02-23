@@ -108,7 +108,21 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className='min-h-screen flex flex-col items-center bg-background px-6 py-18 text-foreground font-readex'>
+    <div className='relative min-h-screen flex flex-col items-center bg-background px-6 py-18 text-foreground font-readex overflow-x-hidden overflow-y-hidden'>
+      {/* Layer 1: soft radial gradient base */}
+      <div className='pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_90%_55%_at_50%_0%,rgba(44,103,242,0.18),transparent)] dark:bg-[radial-gradient(ellipse_90%_55%_at_50%_0%,rgba(30,0,255,0.22),transparent)]' />
+      {/* Layer 2: large blurry blob — primary colour, top-center */}
+      <div className='pointer-events-none absolute z-[2] top-[-15%] left-1/2 -translate-x-1/2 w-[700px] h-[560px] rounded-full bg-[#2c67f2]/25 dark:bg-[#1e00ff]/20 blur-[100px]' />
+      {/* Layer 3: smaller accent blob — bottom right */}
+      <div className='pointer-events-none absolute z-[2] bottom-[-8%] right-[-8%] w-[400px] h-[360px] rounded-full bg-[#2c67f2]/15 dark:bg-[#1e00ff]/14 blur-[80px]' />
+      {/* Layer 4: subtle dot-grid texture */}
+      <div
+        className='pointer-events-none absolute inset-0 z-[3] opacity-[0.06] dark:opacity-[0.07]'
+        style={{
+          backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }}
+      />
       <NavBar />
       <div className='container mx-auto px-4 py-6 max-w-7xl' dir='rtl'>
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-8'>

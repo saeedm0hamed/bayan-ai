@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useAudio } from './context/AudioContext';
 import Link from 'next/link';
 import DisclaimerCard from './components/DisclaimerCard';
+import Grainient from './components/Grainient';
 
 export default function Home() {
   const router = useRouter();
@@ -231,7 +232,50 @@ export default function Home() {
   }, [isRecording]);
 
   return (
-    <main className='relative flex flex-col items-center justify-between min-h-screen px-6 py-6 text-foreground bg-background font-readex overflow-x-hidden'>
+    <main className='relative flex flex-col items-center justify-between min-h-screen px-6 py-6 text-foreground font-readex overflow-x-hidden overflow-y-hidden'>
+      {/* ── Background layers ── */}
+      {/* Layer 0: Grainient animated gradient base */}
+      <div className='pointer-events-none absolute inset-0 z-[0] opacity-15 dark:opacity-10'>
+        <Grainient
+          color1='#9fbaff'
+          color2='#5227FF'
+          color3='#c4b8ff'
+          timeSpeed={0.25}
+          colorBalance={0}
+          warpStrength={0.6}
+          warpFrequency={5}
+          warpSpeed={2}
+          warpAmplitude={30}
+          blendAngle={0}
+          blendSoftness={0.05}
+          rotationAmount={300}
+          noiseScale={2}
+          grainAmount={0.03}
+          grainScale={2}
+          grainAnimated={false}
+          contrast={1.0}
+          gamma={1}
+          saturation={0.5}
+          centerX={0}
+          centerY={0}
+          zoom={0.9}
+        />
+      </div>
+      {/* Layer 1: soft radial gradient base */}
+      <div className='pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_90%_55%_at_50%_0%,rgba(44,103,242,0.18),transparent)] dark:bg-[radial-gradient(ellipse_90%_55%_at_50%_0%,rgba(30,0,255,0.22),transparent)]' />
+      {/* Layer 2: large blurry blob — primary colour, top-center */}
+      <div className='pointer-events-none absolute z-[2] top-[-15%] left-1/2 -translate-x-1/2 w-[700px] h-[560px] rounded-full bg-[#2c67f2]/25 dark:bg-[#1e00ff]/20 blur-[100px]' />
+      {/* Layer 3: smaller accent blob — bottom right */}
+      <div className='pointer-events-none absolute z-[2] bottom-[-8%] right-[-8%] w-[400px] h-[360px] rounded-full bg-[#2c67f2]/15 dark:bg-[#1e00ff]/14 blur-[80px]' />
+      {/* Layer 4: subtle dot-grid texture */}
+      <div
+        className='pointer-events-none absolute inset-0 z-[3] opacity-[0.06] dark:opacity-[0.07]'
+        style={{
+          backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }}
+      />
+      {/* All page content sits above the background layers */}
       <NavBar />
 
       <motion.div
@@ -264,7 +308,7 @@ export default function Home() {
       </div> */}
 
       {/* Center content */}
-      <section className='flex flex-col items-center justify-center flex-1 text-center w-full py-24 -mt-6 md:-mt-10 lg:-mt-48'>
+      <section className='relative z-10 flex flex-col items-center justify-center flex-1 text-center w-full py-24 -mt-6 md:-mt-10 lg:-mt-48'>
         <motion.div
           layoutId='mic-container'
           initial={{ scale: 0.9, opacity: 0 }}
