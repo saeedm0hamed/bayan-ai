@@ -14,6 +14,13 @@ export type RecognitionResult = {
     surah_name?: string;
     verse_text?: string;
   };
+  matches?: {
+    surah_number?: number;
+    ayah_number?: number;
+    similarity_score?: number;
+    surah_name?: string;
+    verse_text?: string;
+  }[];
   surah_name?: string;
   verse_text?: string;
   confidence?: number;

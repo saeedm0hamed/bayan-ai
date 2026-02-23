@@ -359,15 +359,13 @@ export default function Home() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 1 }}
-        className='hidden w-full md:flex justify-end mt-24 px-6 relative z-20'
+        className='hidden xl:inline absolute bottom-6 right-6 z-20 max-w-sm w-full'
       >
-        <div className='w-full md:absolute max-w-sm'>
-          <DisclaimerCard />
-        </div>
+        <DisclaimerCard />
       </motion.div>
 
       {/* Center content */}
-      <section className='relative z-10 flex flex-col items-center justify-center flex-1 text-center w-full py-24 -mt-6 md:-mt-10 lg:-mt-48'>
+      <section className='relative z-10 flex flex-col items-center justify-center flex-1 text-center w-full py-24 -mt-6 md:-mt-10'>
         <motion.div
           layoutId='mic-container'
           initial={{ scale: 0.9, opacity: 0 }}
@@ -480,11 +478,12 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
+        {/* Mobile Disclaimer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 1 }}
-          className='w-full max-w-sm mt-40 md:hidden'
+          className='w-full max-w-sm mt-40 xl:hidden'
         >
           <DisclaimerCard />
         </motion.div>
