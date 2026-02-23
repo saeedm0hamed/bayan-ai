@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Mic, Upload, Square, AlertCircle } from 'lucide-react';
+import { Mic, Upload, Square, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavBar from './components/NavBar';
 import { useState, useRef, useEffect } from 'react';
@@ -12,10 +12,73 @@ import Link from 'next/link';
 import DisclaimerCard from './components/DisclaimerCard';
 import Grainient from './components/Grainient';
 
+const STEPS = [
+  { label: 'جاري رفع الصوت...', sub: 'يتم إرسال التسجيل بأمان' },
+  { label: 'جاري تحليل الصوت...', sub: 'يستمع النموذج لتلاوتك' },
+  { label: 'جاري البحث في القرآن...', sub: 'مطابقة الآيات والسور' },
+  { label: 'اكتملت المعالجة ✓', sub: 'سيتم عرض النتيجة الآن' },
+];
+
+function ProcessingSteps() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const timings = [1200, 2800, 5000];
+    const timeouts = timings.map((delay, i) =>
+      setTimeout(() => setStep(i + 1), delay)
+    );
+    return () => timeouts.forEach(clearTimeout);
+  }, []);
+
+  const current = STEPS[Math.min(step, STEPS.length - 1)];
+  const progress = ((Math.min(step, STEPS.length - 1)) / (STEPS.length - 1)) * 100;
+
+  return (
+    <div className='flex flex-col items-center gap-5 text-center w-72' dir='rtl'>
+      {/* Step badges */}
+      <div className='flex gap-2 justify-center'>
+        {STEPS.map((_, i) => (
+          <motion.div
+            key={i}
+            animate={{ scale: i === step ? 1.2 : 1, opacity: i <= step ? 1 : 0.3 }}
+            transition={{ duration: 0.3 }}
+            className={`w-2.5 h-2.5 rounded-full ${i <= step ? 'bg-(--primary)' : 'bg-muted-foreground'}`}
+          />
+        ))}
+      </div>
+
+      {/* Message */}
+      <AnimatePresence mode='wait'>
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.35 }}
+          className='flex flex-col gap-1'
+        >
+          <p className='text-xl font-bold text-foreground'>{current.label}</p>
+          <p className='text-sm text-muted-foreground'>{current.sub}</p>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Progress bar */}
+      <div className='w-full h-1 rounded-full bg-muted overflow-hidden'>
+        <motion.div
+          className='h-full rounded-full bg-(--primary)'
+          animate={{ width: `${progress === 0 ? 8 : progress}%` }}
+          transition={{ duration: 0.8, ease: 'easeInOut' }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const router = useRouter();
-  const { setAudioFile } = useAudio();
+  const { setAudioFile, setRecognitionResult } = useAudio();
   const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
@@ -29,9 +92,25 @@ export default function Home() {
   const startTimeRef = useRef<number | null>(null);
   const maxRecordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const uploadAudio = (blobOrFile: Blob | File) => {
+  const uploadAudio = async (blobOrFile: Blob | File) => {
     setAudioFile(blobOrFile);
-    router.push('/result');
+    setIsProcessing(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', blobOrFile);
+      const response = await fetch('https://sae8d-bayan-ai.hf.space/recognize', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      setRecognitionResult(data);
+      router.push('/result');
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert('حدث خطأ أثناء معالجة الملف. يرجى المحاولة مرة أخرى.');
+      setIsProcessing(false);
+    }
   };
 
   const startRecording = async () => {
@@ -289,23 +368,6 @@ export default function Home() {
           <DisclaimerCard />
         </div>
       </motion.div>
-      {/* <div style={{ width: '100%', height: '600px', position: 'absolute', zIndex: 0 }}>
-        <LightRays
-          raysOrigin='top-center'
-          raysColor='#1100ff'
-          raysSpeed={1}
-          lightSpread={0.5}
-          rayLength={3}
-          followMouse={true}
-          mouseInfluence={0.1}
-          noiseAmount={0}
-          distortion={0}
-          className='custom-rays'
-          pulsating={false}
-          fadeDistance={1}
-          saturation={1}
-        />
-      </div> */}
 
       {/* Center content */}
       <section className='relative z-10 flex flex-col items-center justify-center flex-1 text-center w-full py-24 -mt-6 md:-mt-10 lg:-mt-48'>
@@ -367,30 +429,6 @@ export default function Home() {
                   </div>
                 </motion.button>
 
-                {/* Processing Overlay DON'T REMOVE */}
-                {/* <AnimatePresence>
-        {isProcessing && (
-          <motion.div
-            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
-            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            className='fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm'
-          >
-            <div className='flex flex-col items-center gap-6'>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              >
-                <Loader2 size={60} className='text-(--primary)' />
-              </motion.div>
-              <div className='flex flex-col items-center gap-2'>
-                <h2 className='text-2xl font-bold text-gray-800' dir='rtl'>جاري المعالجة...</h2>
-                <p className='text-gray-500' dir='rtl'>يتم استخراج الصوت بجودة عالية</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence> */}
               </motion.div>
             )}
             <motion.div
@@ -456,6 +494,41 @@ export default function Home() {
           <DisclaimerCard />
         </motion.div>
       </section>
+      {/* Processing Overlay */}
+      <AnimatePresence>
+        {isProcessing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className='fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/85 backdrop-blur-md'
+          >
+            {/* Pulsing orb */}
+            <div className='relative flex items-center justify-center mb-10'>
+              <motion.div
+                animate={{ scale: [1, 1.18, 1], opacity: [0.18, 0.32, 0.18] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                className='absolute w-44 h-44 rounded-full bg-[--primary]'
+              />
+              <motion.div
+                animate={{ scale: [1, 1.1, 1], opacity: [0.28, 0.5, 0.28] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                className='absolute w-32 h-32 rounded-full bg-[--primary]'
+              />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
+                className='relative z-10'
+              >
+                <Loader2 size={52} className='text-(--primary)' />
+              </motion.div>
+            </div>
+
+            {/* Cycling step messages */}
+            <ProcessingSteps />
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Recording Overlay */}
       <AnimatePresence>
         {isRecording && (

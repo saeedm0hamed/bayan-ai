@@ -82,7 +82,7 @@ const DisclaimerCard = () => {
           إجمالي عدد السور المتعرف عليها بإستخدام بيان ~ {totalRecognitions !== null ? totalRecognitions : '—'}
         </span>
         <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200 border border-border'>
-          متوسط دقة المطابقة ~ {avgAccuracy !== null && avgAccuracy > 0.9 ? `${Math.round(avgAccuracy * 100)}%` : '95%'}
+          متوسط دقة المطابقة ~ {avgAccuracy !== null && avgAccuracy > 0.9 ? `${Math.round(avgAccuracy * 100)}%` : '93%'}
         </span>
         <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200 border border-border'>
           متوسط سرعة المعالجة ~ 5 ث

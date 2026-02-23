@@ -4,28 +4,12 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAudio } from '../context/AudioContext';
 import NavBar from '../components/NavBar';
-import { CheckCircle, XCircle, ArrowLeft, Hash, ScrollText, Target, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowLeft, Hash, ScrollText, Target, AlertCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { db, ensureAnonymousUser } from '@/lib/firebase';
 import { collection, doc, runTransaction, serverTimestamp } from 'firebase/firestore';
-
-type RecognitionResult = {
-  surah_number?: number;
-  ayah_number?: number;
-  similarity_score?: number;
-  best_similarity?: number;
-  possible_match?: {
-    surah_number?: number;
-    ayah_number?: number;
-    similarity_score?: number;
-    surah_name?: string;
-    verse_text?: string;
-  };
-  surah_name?: string;
-  verse_text?: string;
-  confidence?: number;
-};
+import { RecognitionResult } from '../context/AudioContext';
 
 type GlobalStatsDoc = {
   total_recognitions?: number;
@@ -41,12 +25,11 @@ type SessionStatsDoc = {
 };
 
 export default function ResultPage() {
-  const { audioFile } = useAudio();
+  const { audioFile, recognitionResult } = useAudio();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [result, setResult] = useState<RecognitionResult | null>(null);
+  const [result, setResult] = useState<RecognitionResult | null>(recognitionResult);
   const [error, setError] = useState<string | null>(null);
-  const hasUploadedRef = useRef(false);
+  const hasSavedRef = useRef(false);
   const hasPlayedRef = useRef(false);
 
   const effectiveSurahName = result?.surah_name ?? result?.possible_match?.surah_name ?? '';
@@ -181,49 +164,18 @@ export default function ResultPage() {
   }, [result]);
 
   useEffect(() => {
-    if (!audioFile) {
+    if (!recognitionResult) {
       router.push('/');
       return;
     }
-
-    if (hasUploadedRef.current) {
-      return;
-    }
-    hasUploadedRef.current = true;
-
-    const uploadAudio = async () => {
-      const formData = new FormData();
-      formData.append('file', audioFile);
-
-      try {
-        const response = await fetch('https://sae8d-bayan-ai.hf.space/recognize', {
-          // const response = await fetch('http://localhost:8000/recognize', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data: RecognitionResult = await response.json();
-        setResult(data);
-
-        await saveRecognitionStats(data);
-      } catch (err) {
-        console.error('Upload failed:', err);
-        setError('حدث خطأ أثناء معالجة الملف. يرجى المحاولة مرة أخرى.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    uploadAudio();
-  }, [audioFile, router]);
+    if (hasSavedRef.current) return;
+    hasSavedRef.current = true;
+    saveRecognitionStats(recognitionResult);
+  }, [recognitionResult, router]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!loading && result && !error && !hasPlayedRef.current) {
+    if (result && !error && !hasPlayedRef.current) {
       hasPlayedRef.current = true;
       const win = window as typeof window & { webkitAudioContext?: typeof AudioContext };
       const AudioContextClass = win.AudioContext || win.webkitAudioContext;
@@ -246,7 +198,7 @@ export default function ResultPage() {
         audioContext.close();
       };
     }
-  }, [loading, result, error]);
+  }, [result, error]);
 
   return (
     <main className='relative flex flex-col items-center min-h-screen px-6 py-18 text-foreground bg-background font-readex overflow-x-hidden overflow-y-hidden'>
@@ -267,30 +219,7 @@ export default function ResultPage() {
       <NavBar />
 
       <div className='relative flex flex-col items-center justify-center flex-1 w-full max-w-2xl overflow-x-hidden overflow-y-hidden'>
-        {loading ? (
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-              animate={{ opacity: 1, backdropFilter: 'blur(12px)' }}
-              exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-              className='fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm'
-            >
-              <div className='flex flex-col items-center gap-6'>
-                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                  <Loader2 size={60} className='text-(--primary)' />
-                </motion.div>
-                <div className='flex flex-col items-center gap-2'>
-                  <h2 className='text-2xl font-bold text-foreground' dir='rtl'>
-                    جاري المعالجة...
-                  </h2>
-                  <p className='text-muted-foreground' dir='rtl'>
-                    يتم استخراج الصوت بجودة عالية
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        ) : error ? (
+        {error ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -301,7 +230,7 @@ export default function ResultPage() {
             <p className='text-muted-foreground'>{error}</p>
             <button
               onClick={() => router.push('/')}
-              className='flex items-center gap-2 px-6 py-3 mt-4 transition-colors bg-muted rounded-full hover:bg-muted/80 text-foreground'
+              className='flex items-center gap-2 px-6 py-3 mt-4 transition-colors bg-muted rounded-full hover:bg-muted/80 cursor-pointer text-foreground'
             >
               <ArrowLeft size={20} />
               <span>العودة للرئيسية</span>
