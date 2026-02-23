@@ -33,7 +33,7 @@ const DisclaimerCard = () => {
   }, []);
 
   return (
-    <div className='w-full p-4 md:p-5 text-right bg-white/80 dark:bg-muted backdrop-blur-sm rounded-2xl border border-border/70 shadow-md text-card-foreground text-xs md:text-sm'>
+    <div className='w-full p-4 md:p-5 text-right bg-white/80 dark:bg-muted backdrop-blur-sm rounded-2xl border border-border/70 shadow-md text-card-foreground text-xs md:text-sm transition duration-300 ease-in-out'>
       <div className='flex items-center gap-2 mb-2' dir='rtl'>
         <span className='flex items-center justify-center w-7 h-7 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'>
           <AlertCircle size={16} />
@@ -78,14 +78,13 @@ const DisclaimerCard = () => {
         <p className='text-xs font-semibold text-foreground/80'>إحصائيات</p>
       </div>
       <div className='flex flex-wrap gap-2 mt-2 text-[0.7rem]' dir='rtl'>
-        <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200'>
-          إجمالي عدد السور المتعرف عليها بإستخدام بيان ~{' '}
-          {totalRecognitions !== null ? totalRecognitions : '—'}
+        <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200 border border-border'>
+          إجمالي عدد السور المتعرف عليها بإستخدام بيان ~ {totalRecognitions !== null ? totalRecognitions : '—'}
         </span>
-        <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200'>
+        <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200 border border-border'>
           متوسط دقة المطابقة ~ {avgAccuracy !== null ? `${Math.round(avgAccuracy * 100)}%` : '95%'}
         </span>
-        <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200'>
+        <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200 border border-border'>
           متوسط سرعة المعالجة ~ 5 ث
         </span>
       </div>

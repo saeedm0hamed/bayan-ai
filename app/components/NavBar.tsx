@@ -1,5 +1,5 @@
 import { History, Download, FlaskConical, Menu, Sun, Moon, MessageCircleHeart, CheckCircle, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -20,11 +20,22 @@ const NavBar = () => {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
   const [suggestion, setSuggestion] = useState('');
   const [isSubmittingSuggestion, setIsSubmittingSuggestion] = useState(false);
   const [suggestionSuccess, setSuggestionSuccess] = useState(false);
   const { resolvedTheme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -111,12 +122,12 @@ const NavBar = () => {
   return (
     <header className='absolute px-6 md:px-12 py-6 top-0 w-full flex items-center justify-between text-sm text-muted-foreground'>
       <div className='flex items-center gap-2'>
-        <button className='flex items-center gap-2 p-2 rounded-full text-muted-foreground transition duration-300 ease-in-out bg-muted'>
+        <button className='flex items-center gap-2 p-2 rounded-full text-muted-foreground transition duration-300 ease-in-out border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs'>
           نسخة تجريبية
           <FlaskConical size={20} />
         </button>
 
-        <div className='relative'>
+        <div className='relative' ref={menuRef}>
           <button
             className='flex items-center gap-2 p-2 rounded-full hover:text-foreground transition duration-300 ease-in-out cursor-pointer hover:bg-muted hover:scale-105'
             onClick={() => setIsMenuOpen((prev) => !prev)}

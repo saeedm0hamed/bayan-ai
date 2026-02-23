@@ -231,14 +231,20 @@ export default function Home() {
   }, [isRecording]);
 
   return (
-    <main className='relative flex flex-col items-center justify-between min-h-screen px-6 py-6 text-foreground bg-background font-readex'>
+    <main className='relative flex flex-col items-center justify-between min-h-screen px-6 py-6 text-foreground bg-background font-readex overflow-x-hidden'>
       <NavBar />
 
-      <div className='hidden w-full md:flex justify-end mt-24 px-6'>
+      <motion.div
+        layoutId='mic-container'
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 1 }}
+        className='hidden w-full md:flex justify-end mt-24 px-6'
+      >
         <div className='w-full md:absolute max-w-sm'>
           <DisclaimerCard />
         </div>
-      </div>
+      </motion.div>
       {/* <div style={{ width: '100%', height: '600px', position: 'absolute', zIndex: 0 }}>
         <LightRays
           raysOrigin='top-center'
@@ -258,49 +264,56 @@ export default function Home() {
       </div> */}
 
       {/* Center content */}
-      <section className='flex flex-col items-center justify-center flex-1 text-center -mt-6 md:-mt-10 lg:-mt-48'>
-        <div className='relative p-5'>
+      <section className='flex flex-col items-center justify-center flex-1 text-center w-full py-24 -mt-6 md:-mt-10 lg:-mt-48'>
+        <motion.div
+          layoutId='mic-container'
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className='relative p-5'
+        >
           <div className='relative flex flex-row-reverse p-5'>
-            <h1 className='text-[2.6rem] md:text-6xl text-nowrap text-(--primary) font-amiri'>
+            <h1 className='text-[2.8rem] sm:text-[2.6rem] md:text-6xl text-nowrap text-(--primary) font-amiri'>
               ﴾ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴿
             </h1>
             <Link
               href={`https://quran.com/73?startingVerse=4`}
               target='_blank'
-              className='absolute bottom-0 left-0 text-[0.5rem] md:text-xs text-muted-foreground top-2 hover:underline underline-offset-3'
+              className='absolute bottom-0 md:left-0 text-[0.5rem] md:text-xs text-muted-foreground top-2 hover:underline underline-offset-3'
             >
               [المزمل: 4]
             </Link>
           </div>
-          <div className='p-5'>
-            <p className='text-[0.5rem] md:text-xs text-muted-foreground' dir='rtl'>
+          <div className='p-2 md:p-5 md:mt-1'>
+            <p className='text-[0.6rem] md:text-xs text-muted-foreground' dir='rtl'>
               استخدم الذكاء الاصطناعي للتعرف على السور والآيات من خلال الصوت!
             </p>
           </div>
-        </div>
+        </motion.div>
 
-        <motion.div className='relative flex items-center flex-row'>
+        <motion.div className='relative flex items-center justify-center flex-row w-full '>
           {/* Mic button */}
-          <div className='relative flex flex-col items-center justify-center w-56 h-56 p-10'>
+          <div className='relative flex flex-col items-center justify-center w-40 h-40 sm:w-56 sm:h-56 p-6 sm:p-10'>
             {!isRecording && (
               <motion.div
                 layoutId='mic-container'
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
                 className='relative flex items-center justify-center hover:cursor-pointer group'
                 onClick={startRecording}
               >
-                <div className='absolute w-45 h-45 group-hover:scale-110 transition-all duration-500 ease-in-out rounded-full border border-dashed border-(--primary)' />
-                <div className='absolute w-40 h-40 group-hover:scale-140 transition-all duration-400 ease-in-out rounded-full border border-dashed border-(--secondary)' />
+                <div className='absolute w-36 h-36 sm:w-45 sm:h-45 group-hover:scale-110 transition-all duration-500 ease-in-out rounded-full border border-dashed border-(--primary)' />
+                <div className='absolute w-32 h-32 sm:w-40 sm:h-40 group-hover:scale-140 transition-all duration-400 ease-in-out rounded-full border border-dashed border-(--secondary)' />
                 <motion.button
                   layoutId='mic-button'
-                  className='w-40 h-40 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'
+                  className='w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'
                 >
-                  <div className='flex items-center justify-center h-10'>
-                    <Mic size={40} className='text-white' />
+                  <div className='flex items-center justify-center h-6 sm:h-10'>
+                    <Mic size={32} className='text-white sm:hidden' />
+                    <Mic size={40} className='text-white hidden sm:block' />
                   </div>
-                  <div className='flex flex-col h-10 gap-2 text-base font-medium text-white '>
+                  <div className='flex flex-col h-10 gap-0 text-base font-medium text-white '>
                     <motion.p layoutId='mic-text' className='text-base font-medium text-white'>
                       تسجيل مباشر
                     </motion.p>
@@ -336,29 +349,39 @@ export default function Home() {
       </AnimatePresence> */}
               </motion.div>
             )}
-            <div className='absolute right-auto bottom-[-10] md:bottom-[-30] flex items-center justify-center rounded-2xl px-2 py-1 border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs transition duration-200'>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className='absolute right-auto bottom-[-30] md:bottom-[-30] flex items-center text-slate-700 dark:text-slate-200 justify-center rounded-2xl px-2 py-1 border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs transition duration-300'
+            >
               <p>حد أقصى 60 ثانية</p>
               <span className='w-1.5 h-1.5 rounded-full bg-yellow-400 mx-1 inline-block' />
-            </div>
+            </motion.div>
           </div>
 
           {/* Divider */}
-          <div className='relative flex items-center flex-1 p-1 md:p-10 gap-2 flex-col'>
-            <div className='h-14 min-h-[1em] w-px rotate-0 bg-linear-0 from-transparent via-muted-foreground to-transparent opacity-25'></div>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className='relative flex items-center flex-col p-1 md:p-10 gap-2'
+          >
+            <div className='h-14 min-h-[1em] w-px bg-linear-0 from-transparent via-muted-foreground to-transparent opacity-25'></div>
             <p className='text-muted-foreground'>أو</p>
-            <div className='h-14 min-h-[1em] w-px rotate-0 bg-linear-0 fr om-transparent via-muted-foreground to-transparent opacity-25'></div>
-          </div>
+            <div className='h-14 min-h-[1em] w-px bg-linear-0 from-transparent via-muted-foreground to-transparent opacity-25'></div>
+          </motion.div>
 
           {/* Audio button */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
             className='relative flex items-center justify-center p-5 hover:cursor-pointer group'
             onClick={() => fileInputRef.current?.click()}
           >
-            <div className='absolute w-45 h-45 group-hover:scale-110 transition-all duration-500 ease-in-out rounded-full border border-dashed border-(--primary)' />
-            <div className='absolute w-40 h-40 group-hover:scale-140 transition-all duration-400 ease-in-out rounded-full border border-dashed border-(--secondary)' />
+            <div className='absolute w-36 h-36 sm:w-45 sm:h-45 group-hover:scale-110 transition-all duration-500 ease-in-out rounded-full border border-dashed border-(--primary)' />
+            <div className='absolute w-32 h-32 sm:w-40 sm:h-40 group-hover:scale-140 transition-all duration-400 ease-in-out rounded-full border border-dashed border-(--secondary)' />
             <input
               type='file'
               ref={fileInputRef}
@@ -366,11 +389,12 @@ export default function Home() {
               accept='audio/*,video/*'
               onChange={handleFileUpload}
             />
-            <button className='w-40 h-40 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'>
-              <div className='flex items-center justify-center h-10'>
-                <Upload size={40} className='text-white' />
+            <button className='w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-linear-to-bl from-(--primary) to-(--secondary) group-hover:to-(--primary) transition-colors duration-300 ease-in-out flex gap-2 flex-col items-center justify-center shadow-xl'>
+              <div className='flex items-center justify-center h-6 sm:h-10'>
+                <Upload size={32} className='text-white sm:hidden' />
+                <Upload size={40} className='text-white hidden sm:block' />
               </div>
-              <div className='flex flex-col h-10 gap-2 text-base font-medium text-white '>
+              <div className='flex flex-col h-10 gap-0 text-base font-medium text-white '>
                 <p>رفع</p>
                 <span className='text-xs text-white/60'>(فيديو - صوت)</span>
               </div>
@@ -378,9 +402,15 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        <div className='w-full max-w-sm mt-8 md:hidden'>
+        <motion.div
+          layoutId='mic-container'
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 1 }}
+          className='w-full max-w-sm mt-20 md:hidden'
+        >
           <DisclaimerCard />
-        </div>
+        </motion.div>
       </section>
       {/* Recording Overlay */}
       <AnimatePresence>
