@@ -16,7 +16,7 @@ const STEPS = [
   { label: 'جاري رفع الصوت...', sub: 'يتم إرسال التسجيل بأمان' },
   { label: 'جاري تحليل الصوت...', sub: 'يستمع النموذج لتلاوتك' },
   { label: 'جاري البحث في القرآن...', sub: 'مطابقة الآيات والسور' },
-  { label: 'اكتملت المعالجة ✓', sub: 'سيتم عرض النتيجة الآن' },
+  { label: 'اكتملت المعالجة ✅', sub: 'سيتم عرض النتيجة الآن' },
 ];
 
 function ProcessingSteps() {
@@ -24,14 +24,12 @@ function ProcessingSteps() {
 
   useEffect(() => {
     const timings = [1200, 2800, 5000];
-    const timeouts = timings.map((delay, i) =>
-      setTimeout(() => setStep(i + 1), delay)
-    );
+    const timeouts = timings.map((delay, i) => setTimeout(() => setStep(i + 1), delay));
     return () => timeouts.forEach(clearTimeout);
   }, []);
 
   const current = STEPS[Math.min(step, STEPS.length - 1)];
-  const progress = ((Math.min(step, STEPS.length - 1)) / (STEPS.length - 1)) * 100;
+  const progress = (Math.min(step, STEPS.length - 1) / (STEPS.length - 1)) * 100;
 
   return (
     <div className='flex flex-col items-center gap-5 text-center w-72' dir='rtl'>
@@ -358,11 +356,10 @@ export default function Home() {
       <NavBar />
 
       <motion.div
-        layoutId='mic-container'
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 1 }}
-        className='hidden w-full md:flex justify-end mt-24 px-6'
+        className='hidden w-full md:flex justify-end mt-24 px-6 relative z-20'
       >
         <div className='w-full md:absolute max-w-sm'>
           <DisclaimerCard />
@@ -428,7 +425,6 @@ export default function Home() {
                     </span>
                   </div>
                 </motion.button>
-
               </motion.div>
             )}
             <motion.div
@@ -485,11 +481,10 @@ export default function Home() {
         </motion.div>
 
         <motion.div
-          layoutId='mic-container'
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 1 }}
-          className='w-full max-w-sm mt-20 md:hidden'
+          className='w-full max-w-sm mt-40 md:hidden'
         >
           <DisclaimerCard />
         </motion.div>
