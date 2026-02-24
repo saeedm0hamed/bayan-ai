@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAudio } from '../context/AudioContext';
 import NavBar from '../components/NavBar';
-import { CheckCircle, XCircle, ArrowLeft, Hash, ScrollText, Target, AlertCircle, CircleEllipsis } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowLeft, Hash, ScrollText, Target, CircleEllipsis } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { db, ensureAnonymousUser } from '@/lib/firebase';

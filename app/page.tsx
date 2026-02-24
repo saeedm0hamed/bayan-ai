@@ -241,7 +241,6 @@ export default function Home() {
       };
 
       mediaRecorder.start();
-      // eslint-disable-next-line
       startTimeRef.current = Date.now();
 
       // Auto-stop after 60 seconds
@@ -305,12 +304,15 @@ export default function Home() {
             // Fast cut to 1MB using stream copying
             // -fs 1048576 stops when 1MB is reached
             // -c copy avoids slow re-encoding
-            await ffmpeg.exec(['-i', inputName, '-fs', '1048576', '-c', 'copy', outputName]);
-
-            const data = await ffmpeg.readFile(outputName);
-            const trimmedFile = new File([data], file.name, { type: file.type });
-
-            // Clean up
+             await ffmpeg.exec(['-i', inputName, '-fs', '1048576', '-c', 'copy', outputName]);
+ 
+             const data = (await ffmpeg.readFile(outputName)) as Uint8Array;
+              // If SharedArrayBuffer is not accepted by File, we might need to copy it to a regular ArrayBuffer
+              const regularArray = new Uint8Array(data.length);
+              regularArray.set(data);
+              const trimmedFile = new File([regularArray.buffer], file.name, { type: file.type });
+ 
+             // Clean up
             await ffmpeg.deleteFile(inputName);
             await ffmpeg.deleteFile(outputName);
 
