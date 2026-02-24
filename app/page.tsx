@@ -11,6 +11,8 @@ import { useAudio } from './context/AudioContext';
 import Link from 'next/link';
 import DisclaimerCard from './components/DisclaimerCard';
 import Grainient from './components/Grainient';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 const STEPS = [
   { label: 'جاري رفع الصوت...', sub: 'يتم إرسال التسجيل بأمان' },
@@ -19,14 +21,40 @@ const STEPS = [
   { label: 'اكتملت المعالجة ✅', sub: 'سيتم عرض النتيجة الآن' },
 ];
 
-function ProcessingSteps() {
+function ProcessingSteps({ isTrimming }: { isTrimming?: boolean }) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
+    if (isTrimming) return;
     const timings = [3000, 6000, 12000];
     const timeouts = timings.map((delay, i) => setTimeout(() => setStep(i + 1), delay));
     return () => timeouts.forEach(clearTimeout);
-  }, []);
+  }, [isTrimming]);
+
+  if (isTrimming) {
+    return (
+      <div className='flex flex-col items-center gap-5 text-center w-72' dir='rtl'>
+        <div className='flex gap-2 justify-center'>
+          <motion.div
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="w-2.5 h-2.5 rounded-full bg-(--primary)"
+          />
+        </div>
+        <div className='flex flex-col gap-1'>
+          <p className='text-xl font-bold text-foreground'>جاري تقليص حجم الملف...</p>
+          <p className='text-sm text-muted-foreground'>هذا يساعد في تسريع عملية المعالجة</p>
+        </div>
+        <div className='w-full h-1 rounded-full bg-muted overflow-hidden'>
+          <motion.div
+            className='h-full rounded-full bg-(--primary)'
+            animate={{ width: '30%' }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   const current = STEPS[Math.min(step, STEPS.length - 1)];
   const progress = (Math.min(step, STEPS.length - 1) / (STEPS.length - 1)) * 100;
@@ -89,6 +117,20 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const maxRecordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const ffmpegRef = useRef<FFmpeg | null>(null);
+  const [isTrimming, setIsTrimming] = useState(false);
+
+  const loadFFmpeg = async () => {
+    if (ffmpegRef.current) return ffmpegRef.current;
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+    const ffmpeg = new FFmpeg();
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+    ffmpegRef.current = ffmpeg;
+    return ffmpeg;
+  };
 
   const uploadAudio = async (blobOrFile: Blob | File) => {
     setAudioFile(blobOrFile);
@@ -189,6 +231,11 @@ export default function Home() {
       };
 
       mediaRecorder.onstop = () => {
+        const duration = startTimeRef.current ? (Date.now() - startTimeRef.current) / 1000 : 0;
+        if (duration < 5) {
+          alert('التسجيل قصير جداً. يرجى تسجيل 5 ثوانٍ على الأقل.');
+          return;
+        }
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         uploadAudio(blob);
       };
@@ -243,7 +290,41 @@ export default function Home() {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type.startsWith('audio/') || file.type.startsWith('video/')) {
-        uploadAudio(file);
+        // If file is >= 2MB, cut it to 1MB in the frontend
+        if (file.size >= 2 * 1024 * 1024) {
+          setIsProcessing(true);
+          setIsTrimming(true);
+          try {
+            const ffmpeg = await loadFFmpeg();
+            const inputName = 'input_' + Date.now() + (file.name.substring(file.name.lastIndexOf('.')) || '');
+            const outputName = 'output_' + Date.now() + (file.name.substring(file.name.lastIndexOf('.')) || '');
+
+            // Write file to memory
+            await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+            // Fast cut to 1MB using stream copying
+            // -fs 1048576 stops when 1MB is reached
+            // -c copy avoids slow re-encoding
+            await ffmpeg.exec(['-i', inputName, '-fs', '1048576', '-c', 'copy', outputName]);
+
+            const data = await ffmpeg.readFile(outputName);
+            const trimmedFile = new File([data], file.name, { type: file.type });
+
+            // Clean up
+            await ffmpeg.deleteFile(inputName);
+            await ffmpeg.deleteFile(outputName);
+
+            uploadAudio(trimmedFile);
+          } catch (err) {
+            console.error('Frontend trimming error:', err);
+            // Fallback to original file
+            uploadAudio(file);
+          } finally {
+            setIsTrimming(false);
+          }
+        } else {
+          uploadAudio(file);
+        }
       } else {
         alert('يرجى اختيار ملف صوتي أو فيديو صالح');
       }
@@ -431,7 +512,7 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.5 }}
               className='absolute right-auto bottom-[-30] md:bottom-[-30] flex items-center text-slate-700 dark:text-slate-200 justify-center rounded-2xl px-2 py-1 border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs transition duration-300'
             >
-              <p>حد أقصى 60 ثانية</p>
+              <p>من 5 إلى 60 ثانية بحد أقصى</p>
               <span className='w-1.5 h-1.5 rounded-full bg-yellow-400 mx-1 inline-block' />
             </motion.div>
           </div>
@@ -519,7 +600,7 @@ export default function Home() {
             </div>
 
             {/* Cycling step messages */}
-            <ProcessingSteps />
+            <ProcessingSteps isTrimming={isTrimming} />
           </motion.div>
         )}
       </AnimatePresence>
