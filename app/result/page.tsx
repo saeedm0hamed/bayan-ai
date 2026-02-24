@@ -273,7 +273,7 @@ export default function ResultPage() {
       <NavBar />
 
       <div className='relative flex flex-col items-center justify-center flex-1 w-full max-w-2xl overflow-x-hidden overflow-y-hidden'>
-        {error ? (
+        {error || isLowSimilarity ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -281,7 +281,7 @@ export default function ResultPage() {
           >
             <XCircle className='w-20 h-20 text-primary-500' />
             <h2 className='text-2xl font-bold text-foreground'>عذراً، حدث خطأ</h2>
-            <p className='text-muted-foreground'>{error}</p>
+            <p className='text-muted-foreground'>يرجى المحاولة بصوت أعلى وأوضح</p>
             <button
               onClick={() => router.push('/')}
               className='flex items-center gap-2 px-6 py-3 mt-4 transition-colors bg-muted rounded-full hover:bg-muted/80 cursor-pointer text-foreground'
@@ -300,12 +300,13 @@ export default function ResultPage() {
             <div className='w-full p-8 bg-card border border-border shadow-md rounded-3xl md:p-10 text-card-foreground'>
               <div className='flex flex-col items-center gap-6 text-center'>
                 {/* Success Badge */}
-                {isLowSimilarity ? (
+                {/* isLowSimilarity ? (
                   <div className='flex items-center gap-2 rounded-full px-4 py-1.5 bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border border-red-600 text-sm'>
                     <XCircle className='w-4 h-4' />
                     <p>يرجى المحاولة بصوت أعلى وأوضح</p>
                   </div>
-                ) : matchesList.length > 1 ? (
+                ) :  */}
+                {matchesList.length > 1 ? (
                   <div className='flex items-center gap-2 rounded-full px-4 py-1.5 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-600 text-sm'>
                     <CircleEllipsis className='w-4 h-4' />
                     <p>تم التعرف على أكثر من سورة مطابقة بنجاح</p>

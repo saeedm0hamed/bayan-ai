@@ -23,7 +23,7 @@ function ProcessingSteps() {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    const timings = [1200, 2800, 5000];
+    const timings = [3000, 6000, 12000];
     const timeouts = timings.map((delay, i) => setTimeout(() => setStep(i + 1), delay));
     return () => timeouts.forEach(clearTimeout);
   }, []);
