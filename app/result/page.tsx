@@ -214,7 +214,7 @@ export default function ResultPage() {
   const isLowSimilarity = useMemo(() => {
     if (!topMatch) return false;
     const score = typeof topMatch.similarity_score === 'number' ? topMatch.similarity_score : 0;
-    return isNaN(score) || score < 0.5;
+    return isNaN(score) || score < 0.2;
   }, [topMatch]);
 
   useEffect(() => {

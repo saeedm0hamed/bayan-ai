@@ -61,9 +61,7 @@ const DisclaimerCard = () => {
           </span>
           <p className='text-xs font-semibold text-foreground/80'>تنبيه </p>
         </div>
-        <div
-          className={`transition-transform duration-200 ${open ? 'rotate-180' : 'rotate-0'}`}
-        >
+        <div className={`transition-transform duration-200 ${open ? 'rotate-180' : 'rotate-0'}`}>
           <ChevronDown size={16} className='text-muted-foreground' />
         </div>
       </button>
@@ -93,9 +91,7 @@ const DisclaimerCard = () => {
               </div>
               <div className='flex items-baseline px-2'>
                 <span className='w-1.25 md:w-1.5 h-1 text-xs rounded-full bg-muted-foreground/30 mx-1 inline-block' />
-                <p className='text-xs'>
-                  لا تُحفظ أيًا من تسجيلاتك الصوتية، وتُحذف فورا بعد اكتمال العمليات المطلوبة.
-                </p>
+                <p className='text-xs'>لا تُحفظ أيًا من تسجيلاتك الصوتية، وتُحذف فورا بعد اكتمال العمليات المطلوبة.</p>
               </div>
             </div>
 
@@ -109,7 +105,7 @@ const DisclaimerCard = () => {
               </div>
               <div className='flex flex-wrap gap-2 text-[0.7rem]'>
                 <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200 border border-border'>
-                  إجمالي عدد السور المتعرف عليها ~ {totalRecognitions !== null ? totalRecognitions : '—'}
+                  إجمالي عدد السور المتعرف عليها بإستخدام بيان ~ {totalRecognitions !== null ? totalRecognitions : '—'}
                 </span>
                 <span className='px-2 py-1 rounded-full bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200 border border-border'>
                   متوسط دقة المطابقة ~{' '}
