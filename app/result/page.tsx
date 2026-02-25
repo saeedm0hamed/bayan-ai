@@ -30,6 +30,7 @@ export default function ResultPage() {
   const router = useRouter();
   const result = recognitionResult;
   const [error] = useState<string | null>(null);
+  const [blurDismissed, setBlurDismissed] = useState(false);
   const hasSavedRef = useRef(false);
   const hasPlayedRef = useRef(false);
 
@@ -281,7 +282,7 @@ export default function ResultPage() {
           >
             <XCircle className='w-20 h-20 text-primary-500' />
             <h2 className='text-2xl font-bold text-foreground'>عذراً، حدث خطأ</h2>
-            <p className='text-muted-foreground'>يرجى المحاولة بصوت أعلى وأوضح</p>
+            <p className='text-muted-foreground'>يرجى إعادة المحاولة بصوت أعلى وأوضح</p>
             <button
               onClick={() => router.push('/')}
               className='flex items-center gap-2 px-6 py-3 mt-4 transition-colors bg-muted rounded-full hover:bg-muted/80 cursor-pointer text-foreground'
@@ -303,7 +304,7 @@ export default function ResultPage() {
                 {isLowSimilarity ? (
                   <div className='flex items-center gap-2 rounded-full px-4 py-1.5 bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border border-red-600 text-sm'>
                     <XCircle className='w-4 h-4' />
-                    <p>يرجى المحاولة بصوت أعلى وأوضح</p>
+                    <p>يرجى إعادة المحاولة بصوت أعلى وأوضح</p>
                   </div>
                 ) : matchesList.length > 1 ? (
                   <div className='flex items-center gap-2 rounded-full px-4 py-1.5 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-600 text-sm'>
@@ -317,16 +318,47 @@ export default function ResultPage() {
                   </div>
                 )}
 
-                <h2 className='text-4xl md:text-6xl text-foreground font-amiri mt-4' dir='rtl'>
-                  سورة {displaySurahName}
-                </h2>
-
-                <p
-                  className='w-full px-6 py-6 mt-6 text-xl leading-loose shadow-inner rounded-2xl bg-muted md:text-2xl font-amiri'
-                  dir='rtl'
-                >
-                  ﴿ {effectiveVerseText} ﴾
-                </p>
+                {isLowSimilarity && !blurDismissed ? (
+                  <div className='relative w-full mt-4'>
+                    {/* Blurred content */}
+                    <div className='blur-sm pointer-events-none'>
+                      <h2 className='text-4xl md:text-6xl text-foreground font-amiri' dir='rtl'>
+                        سورة {displaySurahName}
+                      </h2>
+                      <p
+                        className='w-full px-6 py-6 mt-6 text-xl leading-loose shadow-inner rounded-2xl bg-muted md:text-2xl font-amiri'
+                        dir='rtl'
+                      >
+                        ﴿ {effectiveVerseText} ﴾
+                      </p>
+                    </div>
+                    {/* Overlay warning — click to dismiss */}
+                    <button
+                      onClick={() => setBlurDismissed(true)}
+                      className='absolute inset-0 flex flex-col items-center justify-center gap-2 cursor-pointer w-full'
+                    >
+                      <XCircle className='w-7 h-7 text-red-500 dark:text-red-400' />
+                      <p className='text-sm font-semibold text-red-600 dark:text-red-400 bg-card/80 px-3 py-1 rounded-full backdrop-blur-sm'>
+                        قد تكون النتيجة غير دقيقة
+                      </p>
+                      <p className='text-xs text-muted-foreground bg-card/80 px-3 py-1 rounded-full backdrop-blur-sm'>
+                        اضغط هنا للإظهار على كل حال
+                      </p>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <h2 className='text-4xl md:text-6xl text-foreground font-amiri mt-4' dir='rtl'>
+                      سورة {displaySurahName}
+                    </h2>
+                    <p
+                      className='w-full px-6 py-6 mt-6 text-xl leading-loose shadow-inner rounded-2xl bg-muted md:text-2xl font-amiri'
+                      dir='rtl'
+                    >
+                      ﴿ {effectiveVerseText} ﴾
+                    </p>
+                  </>
+                )}
 
                 {/* Transcription */}
                 {/* <p
@@ -338,21 +370,41 @@ export default function ResultPage() {
 
                 {/* Meta Info */}
                 <div className='flex gap-6 mt-2'>
-                  <div className='flex flex-col items-center gap-1 text-sm'>
-                    <div className='flex items-center justify-center bg-primary/20 rounded-full w-9 h-9'>
-                      <ScrollText className='w-4 h-4 text-primary' />
+                  {isLowSimilarity && !blurDismissed ? (
+                    <div className='flex flex-col items-center gap-1 text-sm blur-sm pointer-events-none'>
+                      <div className='flex items-center justify-center bg-primary/20 rounded-full w-9 h-9'>
+                        <ScrollText className='w-4 h-4 text-primary' />
+                      </div>
+                      <p className='text-muted-foreground'>رقم السورة</p>
+                      <p className='font-semibold'>{effectiveSurahNumber ?? '-'}</p>
                     </div>
-                    <p className='text-muted-foreground'>رقم السورة</p>
-                    <p className='font-semibold'>{effectiveSurahNumber ?? '-'}</p>
-                  </div>
+                  ) : (
+                    <div className='flex flex-col items-center gap-1 text-sm'>
+                      <div className='flex items-center justify-center bg-primary/20 rounded-full w-9 h-9'>
+                        <ScrollText className='w-4 h-4 text-primary' />
+                      </div>
+                      <p className='text-muted-foreground'>رقم السورة</p>
+                      <p className='font-semibold'>{effectiveSurahNumber ?? '-'}</p>
+                    </div>
+                  )}
 
-                  <div className='flex flex-col items-center gap-1 text-sm'>
-                    <div className='flex items-center justify-center bg-primary/20 rounded-full w-9 h-9'>
-                      <Hash className='w-4 h-4 text-primary' />
+                  {isLowSimilarity && !blurDismissed ? (
+                    <div className='flex flex-col items-center gap-1 text-sm blur-sm pointer-events-none'>
+                      <div className='flex items-center justify-center bg-primary/20 rounded-full w-9 h-9'>
+                        <Hash className='w-4 h-4 text-primary' />
+                      </div>
+                      <p className='text-muted-foreground'>رقم الآية</p>
+                      <p className='font-semibold'>{effectiveAyahNumber ?? '-'}</p>
                     </div>
-                    <p className='text-muted-foreground'>رقم الآية</p>
-                    <p className='font-semibold'>{effectiveAyahNumber ?? '-'}</p>
-                  </div>
+                  ) : (
+                    <div className='flex flex-col items-center gap-1 text-sm'>
+                      <div className='flex items-center justify-center bg-primary/20 rounded-full w-9 h-9'>
+                        <Hash className='w-4 h-4 text-primary' />
+                      </div>
+                      <p className='text-muted-foreground'>رقم الآية</p>
+                      <p className='font-semibold'>{effectiveAyahNumber ?? '-'}</p>
+                    </div>
+                  )}
 
                   <div className='flex flex-col items-center gap-1 text-sm'>
                     <div className='flex items-center justify-center bg-primary/20 rounded-full w-9 h-9'>

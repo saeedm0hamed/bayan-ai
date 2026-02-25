@@ -38,7 +38,7 @@ function ProcessingSteps({ isTrimming }: { isTrimming?: boolean }) {
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 1, 0.3] }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-2.5 h-2.5 rounded-full bg-(--primary)"
+            className='w-2.5 h-2.5 rounded-full bg-(--primary)'
           />
         </div>
         <div className='flex flex-col gap-1'>
@@ -304,15 +304,15 @@ export default function Home() {
             // Fast cut to 1MB using stream copying
             // -fs 1048576 stops when 1MB is reached
             // -c copy avoids slow re-encoding
-             await ffmpeg.exec(['-i', inputName, '-fs', '1048576', '-c', 'copy', outputName]);
- 
-             const data = (await ffmpeg.readFile(outputName)) as Uint8Array;
-              // If SharedArrayBuffer is not accepted by File, we might need to copy it to a regular ArrayBuffer
-              const regularArray = new Uint8Array(data.length);
-              regularArray.set(data);
-              const trimmedFile = new File([regularArray.buffer], file.name, { type: file.type });
- 
-             // Clean up
+            await ffmpeg.exec(['-i', inputName, '-fs', '1048576', '-c', 'copy', outputName]);
+
+            const data = (await ffmpeg.readFile(outputName)) as Uint8Array;
+            // If SharedArrayBuffer is not accepted by File, we might need to copy it to a regular ArrayBuffer
+            const regularArray = new Uint8Array(data.length);
+            regularArray.set(data);
+            const trimmedFile = new File([regularArray.buffer], file.name, { type: file.type });
+
+            // Clean up
             await ffmpeg.deleteFile(inputName);
             await ffmpeg.deleteFile(outputName);
 
@@ -514,7 +514,7 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.5 }}
               className='absolute right-auto bottom-[-30] md:bottom-[-30] flex items-center text-slate-700 dark:text-slate-200 justify-center rounded-2xl px-2 py-1 border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs transition duration-300'
             >
-              <p>من 5 إلى 60 ثانية بحد أقصى</p>
+              <p>حد أدنى 5 ثوانٍ</p>
               <span className='w-1.5 h-1.5 rounded-full bg-yellow-400 mx-1 inline-block' />
             </motion.div>
           </div>
