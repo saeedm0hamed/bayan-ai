@@ -231,11 +231,6 @@ export default function Home() {
       };
 
       mediaRecorder.onstop = () => {
-        const duration = startTimeRef.current ? (Date.now() - startTimeRef.current) / 1000 : 0;
-        if (duration < 5) {
-          alert('التسجيل قصير جداً. يرجى تسجيل 5 ثوانٍ على الأقل.');
-          return;
-        }
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         uploadAudio(blob);
       };
@@ -514,7 +509,7 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.5 }}
               className='absolute right-auto bottom-[-30] md:bottom-[-30] flex items-center text-slate-700 dark:text-slate-200 justify-center rounded-2xl px-2 py-1 border-border border backdrop-blur-sm cursor-default hover:shadow-sm bg-muted/80 text-xs transition duration-300'
             >
-              <p>حد أدنى 5 ثوانٍ</p>
+              <p>حد أقصى 60 ثانية</p>
               <span className='w-1.5 h-1.5 rounded-full bg-yellow-400 mx-1 inline-block' />
             </motion.div>
           </div>
