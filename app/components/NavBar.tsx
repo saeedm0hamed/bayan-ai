@@ -1,9 +1,22 @@
-import { History, Download, FlaskConical, Menu, Sun, Moon, MessageCircleHeart, CheckCircle, X } from 'lucide-react';
+import {
+  History,
+  Download,
+  FlaskConical,
+  Menu,
+  Sun,
+  Moon,
+  MessageCircleHeart,
+  CheckCircle,
+  X,
+  UserStar,
+  ExternalLink,
+} from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useTheme } from '../context/ThemeContext';
+import Link from 'next/link';
 
 const GOOGLE_FORM_ACTION =
   'https://docs.google.com/forms/d/e/1FAIpQLScuQGPKkrWiNGV_En9sNPeiLCFn3-e9OprspDrM4grx1XjGtg/formResponse';
@@ -107,7 +120,7 @@ const NavBar = () => {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: body.toString(),
-    }).catch(() => { });
+    }).catch(() => {});
 
     setSuggestionSuccess(true);
     setSuggestion('');
@@ -180,6 +193,16 @@ const NavBar = () => {
                   <span className='flex-1 text-right'>الاقتراحات</span>
                   <MessageCircleHeart size={20} className='dark:text-foreground shrink-0' />
                 </button>
+
+                <Link
+                  href='https://sae8d.vercel.app/'
+                  target='_blank'
+                  className='flex items-center gap-3 p-2 rounded-full hover:text-foreground transition duration-300 ease-in-out cursor-pointer hover:bg-muted hover:scale-105 w-full min-w-[180px]'
+                >
+                  <ExternalLink size={20} className='text-left dark:text-foreground shrink-0' />{' '}
+                  <span className='flex-1 text-right'>حول المطور</span>
+                  <UserStar size={20} className='dark:text-foreground shrink-0' />
+                </Link>
               </motion.div>
             )}
           </AnimatePresence>
