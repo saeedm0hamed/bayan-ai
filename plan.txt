@@ -1,0 +1,12 @@
+- host a lightweight Node.js/Express server with a Quran JSON dataset (114 surahs, all ayahs normalized in Arabic script).
+- Preload a JSON database of surahs/ayahs (e.g., from Tanzil.net, public domain).
+- Convert transcript to plain text, then use fuzzy string matching like Levenshtein distance or libraries such as fuse.js/string-similarity to score against all ayahs. 
+    - Select the highest-match surah (threshold >80% similarity). 
+    - For accuracy, segment transcript into ayah-sized chunks and average scores.
+
+- Test with diverse reciters (Hafs, Warsh) using datasets from Tarteel or Hugging Face's whisper-tiny-ar-quran.
+    - Add fallback to cloud APIs like Google Cloud Speech-to-Text for better Arabic ASR if Web Speech falters (via streaming audio). 
+    - or Train a simple custom model via Hugging Face if needed, but start browser-only for professionalism.
+- Implement noise reduction with Web Audio API's BiquadFilterNode. 
+- Monitor accuracy with user feedback logs; aim for 90%+ via iterative A/B testing.
+- waveform visualizer via Web Audio API
